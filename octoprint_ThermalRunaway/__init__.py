@@ -51,10 +51,12 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
         BTemps = temps["B"]
         BSetTemp = BTemps[1]
         BCurrentTemp = BTemps[0]
-##        if (BSetTemp > "0"):
-##            BMaxTemp = BSetTemp + BMaxAbove
-##        else:
-##            BMaxTemp = BMaxOffTemp
+        BCurrentTempInt = round(BCurrentTemp)
+
+        if (BSetTemp > "0"):
+            BMaxTemp = BSetTemp + BMaxAbove
+        else:
+            BMaxTemp = BMaxOffTemp
 
         T0Temps = temps["T0"]
         T0SetTemp = T0Temps[1]
@@ -67,15 +69,14 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
         _logger.debug(BSetTemp)
         _logger.debug('BCurrentTemp:')
         _logger.debug(BCurrentTemp)
-        BCurrentTempInt = round(BCurrentTemp)
         _logger.debug('Current Temp rounded:')
         _logger.debug(BCurrentTempInt)
         _logger.debug('BMaxTemp:')
         _logger.debug(BMaxTemp)
         if (BCurrentTemp > BMaxTemp):
             _logger.debug('Bed above MaxTemp ------------------------------------------------------------------------------------')
-        if (T0CurrentTemp > T0MaxTemp):
-            _logger.debug('T0 above MaxTemp ------------------------------------------------------------------------------------')
+##        if (T0CurrentTemp > T0MaxTemp):
+##            _logger.debug('T0 above MaxTemp ------------------------------------------------------------------------------------')
         
 
     def get_temps(self, comm, parsed_temps):
