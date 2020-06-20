@@ -40,11 +40,11 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
 
     def check_temps(self, comm, parsed_temps):
                 BTemp = parsed_temps["B"]
-                _logging.debug('B tuple = ' + BTemp);
+                _logger.debug('B tuple = ' + BTemp);
                 BCurrentTemp = BTemp[0]
-                _logging.debug('B Current Temp = ' + BCurrentTemp)
+                _logger.debug('B Current Temp = ' + BCurrentTemp)
                 BSetTemp = BTemp[1]
-                _logging.debug('B Set Temp = ' + BSetTemp)
+                _logger.debug('B Set Temp = ' + BSetTemp)
                 return parsed_temps
 
     ##~~ Softwareupdate hook
