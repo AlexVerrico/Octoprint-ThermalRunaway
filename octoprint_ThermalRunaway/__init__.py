@@ -42,11 +42,11 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
     def check_temps(self, temps):
         _logger.debug('reached start of check_temps')
         
-        BMaxAbove = "10"
-        T0MaxAbove = "25"
+        BMaxAbove = 10
+        T0MaxAbove = 25
 
-        BMaxOffTemp = "50"
-        T0MaxOffTemp = "250"
+        BMaxOffTemp = 50
+        T0MaxOffTemp = 250
         
         BTemps = temps["B"]
         BSetTemp = BTemps[1]
