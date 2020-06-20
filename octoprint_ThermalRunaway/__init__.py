@@ -41,7 +41,7 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
 
     def get_temps(self, comm, parsed_temps):
         temps = parsed_temps
-        t = threading.Timer(0,self.monitor_temps,[temps])
+        t = threading.Timer(0,self.check_temps,[temps])
         t.start()
         return parsed_temps
 ##                BTemp = parsed_temps["B"]
