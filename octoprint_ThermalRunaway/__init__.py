@@ -40,6 +40,7 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
     ##~~ Temperatures received hook
 
     def check_temps(self, temps):
+        _logger.debug('reached start of check_temps')
         global BHightemp
         global T0HighTemp
         
