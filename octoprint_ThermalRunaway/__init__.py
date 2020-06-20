@@ -51,10 +51,10 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
         BTemps = temps["B"]
         BSetTemp = BTemps[1]
         BCurrentTemp = BTemps[0]
-        if (BSetTemp > "0"):
-            BMaxTemp = BSetTemp + BMaxAbove
-        else:
-            BMaxTemp = BMaxOffTemp
+##        if (BSetTemp > "0"):
+##            BMaxTemp = BSetTemp + BMaxAbove
+##        else:
+##            BMaxTemp = BMaxOffTemp
 
         T0Temps = temps["T0"]
         T0SetTemp = T0Temps[1]
