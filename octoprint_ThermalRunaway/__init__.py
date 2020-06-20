@@ -10,50 +10,64 @@ from __future__ import absolute_import
 # Take a look at the documentation on what other plugin mixins are available.
 
 import octoprint.plugin
+import logging
+
+_logger = logging.getLogger('octoprint.plugins.ThermalRunaway')
 
 class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
                            octoprint.plugin.AssetPlugin,
                            octoprint.plugin.TemplatePlugin):
 
-	##~~ SettingsPlugin mixin
+    ##~~ SettingsPlugin mixin
 
-	def get_settings_defaults(self):
-		return dict(
-			# put your plugin's default settings here
-		)
+    def get_settings_defaults(self):
+        return dict(
+            # put your plugin's default settings here
+        )
 
-	##~~ AssetPlugin mixin
+    ##~~ AssetPlugin mixin
 
-	def get_assets(self):
-		# Define your plugin's asset files to automatically include in the
-		# core UI here.
-		return dict(
-			js=["js/ThermalRunaway.js"],
-			css=["css/ThermalRunaway.css"],
-			less=["less/ThermalRunaway.less"]
-		)
+    def get_assets(self):
+        # Define your plugin's asset files to automatically include in the
+        # core UI here.
+        return dict(
+            js=["js/ThermalRunaway.js"],
+            css=["css/ThermalRunaway.css"],
+            less=["less/ThermalRunaway.less"]
+        )
 
-	##~~ Softwareupdate hook
+    ##~~ Temperatures received hook
 
-	def get_update_information(self):
-		# Define the configuration for your plugin to use with the Software Update
-		# Plugin here. See https://docs.octoprint.org/en/master/bundledplugins/softwareupdate.html
-		# for details.
-		return dict(
-			ThermalRunaway=dict(
-				displayName="Thermalrunaway Plugin",
-				displayVersion=self._plugin_version,
+    def check_temps(self, parsed_temps):
+                BTemp = parsed_temps["B"]
+                _logging.debug('B tuple = ' + BTemp);
+                BCurrentTemp = BTemp[0]
+                _logging.debug('B Current Temp = ' + BCurrentTemp)
+                BSetTemp = BTemp[1]
+                _logging.debug('B Set Temp = ' + BSetTemp)
+                return parsed_temps
 
-				# version check: github repository
-				type="github_release",
-				user="AlexVerrico",
-				repo="Octoprint-ThermalRunaway",
-				current=self._plugin_version,
+    ##~~ Softwareupdate hook
 
-				# update method: pip
-				pip="https://github.com/AlexVerrico/Octoprint-ThermalRunaway/archive/{target_version}.zip"
-			)
-		)
+    def get_update_information(self):
+        # Define the configuration for your plugin to use with the Software Update
+        # Plugin here. See https://docs.octoprint.org/en/master/bundledplugins/softwareupdate.html
+        # for details.
+        return dict(
+            ThermalRunaway=dict(
+                displayName="Thermalrunaway Plugin",
+                displayVersion=self._plugin_version,
+
+                # version check: github repository
+                type="github_release",
+                user="AlexVerrico",
+                repo="Octoprint-ThermalRunaway",
+                current=self._plugin_version,
+
+                # update method: pip
+                pip="https://github.com/AlexVerrico/Octoprint-ThermalRunaway/archive/{target_version}.zip"
+            )
+        )
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
@@ -69,11 +83,11 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
 #__plugin_pythoncompat__ = ">=2.7,<4" # python 2 and 3
 
 def __plugin_load__():
-	global __plugin_implementation__
-	__plugin_implementation__ = ThermalrunawayPlugin()
+    global __plugin_implementation__
+    __plugin_implementation__ = ThermalRunawayPlugin()
 
-	global __plugin_hooks__
-	__plugin_hooks__ = {
-		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
-	}
-
+    global __plugin_hooks__
+    __plugin_hooks__ = {
+        "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
+        "octoprint.comm.protocol.temperatures.received": __plugin_implementation__.check_temps
+    }
