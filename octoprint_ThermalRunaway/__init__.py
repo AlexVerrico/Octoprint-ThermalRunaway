@@ -38,7 +38,7 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
 
     ##~~ Temperatures received hook
 
-    def check_temps(self, parsed_temps):
+    def check_temps(self, comm, parsed_temps):
                 BTemp = parsed_temps["B"]
                 _logging.debug('B tuple = ' + BTemp);
                 BCurrentTemp = BTemp[0]
