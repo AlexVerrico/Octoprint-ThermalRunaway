@@ -11,6 +11,7 @@ from __future__ import absolute_import
 
 import octoprint.plugin
 import logging
+import threading
 
 _logger = logging.getLogger('octoprint.plugins.ThermalRunaway')
 
@@ -38,18 +39,53 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
 
     ##~~ Temperatures received hook
 
-    def check_temps(self, comm, parsed_temps):
-                BTemp = parsed_temps["B"]
-                _logger.debug('B tuple = ');
-                _logger.debug(BTemp)
-                BCurrentTemp = BTemp[0]
-                _logger.debug('B Current Temp = ')
-                _logger.debug(BCurrentTemp)
-                BSetTemp = BTemp[1]
-                _logger.debug('B Set Temp = ')
-                _logger.debug(BSetTemp)
-                return parsed_temps
+    def get_temps(self, comm, parsed_temps):
+        temps = parsed_temps
+        t = threading.Timer(0,self.monitor_temps,[temps])
+        t.start()
+        return parsed_temps
+##                BTemp = parsed_temps["B"]
+##                _logger.debug('B tuple = ');
+##                _logger.debug(BTemp)
+##                BCurrentTemp = BTemp[0]
+##                _logger.debug('B Current Temp = ')
+##                _logger.debug(BCurrentTemp)
+##                BSetTemp = BTemp[1]
+##                _logger.debug('B Set Temp = ')
+##                _logger.debug(BSetTemp)
 
+    def check_temps(self, temps):
+        global BHightemp
+        global T0HighTemp
+        
+        BMaxAbove = "10"
+        T0MaxAbove = "25"
+
+        BMaxOffTemp = "50"
+        T0MaxOffTemp = "250"
+        
+        BTemps = temps["B"]
+        BSetTemp = BTemps[1]
+        BCurrentTemp = BTemps[0]
+        if (BSetTemp > "0"):
+            BMaxTemp = BSetTemp + BMaxAbove
+        else:
+            BMaxTemp = BMaxOffTemp
+
+        T0Temps = temps["T0"]
+        T0SetTemp = T0Temps[1]
+        T0CurrentTemp = T0Temps[0]
+        if (T0SetTemp > "0"):
+            T0MaxTemp = T0SetTemp + T0MaxAbove
+        else:
+            T0MaxTemp = T0MaxOffTemp
+
+        if (BCurrentTemp > BMaxTemp):
+            _logger.debug("Bed above MaxTemp ------------------------------------------------------------------------------------")
+        if (T0CurrentTemp > T0MaxTemp):
+            _logger.debug("T0 above MaxTemp ------------------------------------------------------------------------------------")
+
+        return
     ##~~ Softwareupdate hook
 
     def get_update_information(self):
@@ -92,5 +128,5 @@ def __plugin_load__():
     global __plugin_hooks__
     __plugin_hooks__ = {
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
-        "octoprint.comm.protocol.temperatures.received": __plugin_implementation__.check_temps
+        "octoprint.comm.protocol.temperatures.received": __plugin_implementation__.get_temps
     }
