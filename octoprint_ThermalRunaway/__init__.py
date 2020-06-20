@@ -39,21 +39,6 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
 
     ##~~ Temperatures received hook
 
-    def get_temps(self, comm, parsed_temps):
-        temps = parsed_temps
-        t = threading.Timer(0,self.check_temps,[temps])
-        t.start()
-        return parsed_temps
-##                BTemp = parsed_temps["B"]
-##                _logger.debug('B tuple = ');
-##                _logger.debug(BTemp)
-##                BCurrentTemp = BTemp[0]
-##                _logger.debug('B Current Temp = ')
-##                _logger.debug(BCurrentTemp)
-##                BSetTemp = BTemp[1]
-##                _logger.debug('B Set Temp = ')
-##                _logger.debug(BSetTemp)
-
     def check_temps(self, temps):
         global BHightemp
         global T0HighTemp
@@ -91,6 +76,23 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
             _logger.debug('T0 above MaxTemp ------------------------------------------------------------------------------------')
 
         return
+
+    def get_temps(self, comm, parsed_temps):
+        temps = parsed_temps
+        t = threading.Timer(0,self.check_temps,[temps])
+        t.start()
+        return parsed_temps
+##                BTemp = parsed_temps["B"]
+##                _logger.debug('B tuple = ');
+##                _logger.debug(BTemp)
+##                BCurrentTemp = BTemp[0]
+##                _logger.debug('B Current Temp = ')
+##                _logger.debug(BCurrentTemp)
+##                BSetTemp = BTemp[1]
+##                _logger.debug('B Set Temp = ')
+##                _logger.debug(BSetTemp)
+
+    
     ##~~ Softwareupdate hook
 
     def get_update_information(self):
