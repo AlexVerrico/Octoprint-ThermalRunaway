@@ -81,9 +81,9 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
             T0MaxTemp = T0MaxOffTemp
 
         if (BCurrentTemp > BMaxTemp):
-            _logger.debug("Bed above MaxTemp ------------------------------------------------------------------------------------")
+            _logger.debug('Bed above MaxTemp ------------------------------------------------------------------------------------')
         if (T0CurrentTemp > T0MaxTemp):
-            _logger.debug("T0 above MaxTemp ------------------------------------------------------------------------------------")
+            _logger.debug('T0 above MaxTemp ------------------------------------------------------------------------------------')
 
         return
     ##~~ Softwareupdate hook
