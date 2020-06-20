@@ -1,0 +1,4 @@
+include README.md
+recursive-include octoprint_ThermalRunaway/templates *
+recursive-include octoprint_ThermalRunaway/translations *
+recursive-include octoprint_ThermalRunaway/static *
