@@ -50,6 +50,7 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
         
         BTemps = temps["B"]
         BSetTemp = BTemps[1]
+        BSetTempInt = round(BSetTemp)
         BCurrentTemp = BTemps[0]
         BCurrentTempInt = round(BCurrentTemp)
 
