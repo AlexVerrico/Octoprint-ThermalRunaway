@@ -79,9 +79,13 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
 
     def get_temps(self, comm, parsed_temps):
         temps = parsed_temps
-        t = threading.Timer(0,self.check_temps,[temps])
-        t.start()
+        if (temps == parsed_temps):
+            _logger.debug('Spawning new thread...')
+            t = threading.Timer(0,self.check_temps,[temps])
+            t.start()
+            _logger.debug('Spawned new thread.')
         return parsed_temps
+    
 ##                BTemp = parsed_temps["B"]
 ##                _logger.debug('B tuple = ');
 ##                _logger.debug(BTemp)
