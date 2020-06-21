@@ -49,7 +49,6 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
 
     def check_temps(self, temps):
         global bHighTemp
-
         _logger.debug('reached start of check_temps')
         if (bHighTemp > 0):
             _logger.debug('HighTemp > 0')
