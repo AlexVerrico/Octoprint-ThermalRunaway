@@ -50,43 +50,45 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
     def check_temps(self, temps):
         _logger.debug('reached start of check_temps')
         global BHighTemp
-        BMaxDiff = 10
-        BMaxTemp = 50
-        BTemps = temps["B"]
-        BSetTemp = BTemps[1]
-        BCurrentTemp = BTemps[0]
-
-        if (BSetTemp > 0):
-            _logger.debug('SetTemp > 0')
-            BMaxTemp = BSetTemp + BMaxDiff
-            if (BHighTemp > BMaxTemp):
-                _logger.debug('HighTemp > MaxTemp')
-                if (BHighTemp < BCurrentTemp):
-                    _logger.debug('HighTemp < CurrentTemp')
-                    _logger.debug('KillPrint')
-##                    killPrint()
-                else:
-                    _logger.debug('HighTemp > CurrentTemp')
-                    BHighTemp = BCurrentTemp
-##            else:
-##                _logger.debug('HighTemp < MaxTemp')
-            if (BMaxTemp > BCurrentTemp):
-                _logger.debug('MaxTemp > CurrentTemp')
-##            else:
-##                BHighTemp = BCurrentTemp
-        else:
-            _logger.debug('Bed Turned off.')
-            if (BCurrentTemp > BMaxTemp):
-##                killPrint()
-                _logger.debug('KillPrint')
-
-        _logger.debug('BSetTemp:')
-        _logger.debug(BSetTemp)
-        
-        _logger.debug('BCurrentTemp:')
-        _logger.debug(BCurrentTemp)
-        _logger.debug('BMaxTemp:')
-        _logger.debug(BMaxTemp)
+        BHighTemp = BHighTemp + 1
+        _logger.debug(BHighTemp)
+##        BMaxDiff = 10
+##        BMaxTemp = 50
+##        BTemps = temps["B"]
+##        BSetTemp = BTemps[1]
+##        BCurrentTemp = BTemps[0]
+##
+##        if (BSetTemp > 0):
+##            _logger.debug('SetTemp > 0')
+##            BMaxTemp = BSetTemp + BMaxDiff
+##            if (BHighTemp > BMaxTemp):
+##                _logger.debug('HighTemp > MaxTemp')
+##                if (BHighTemp < BCurrentTemp):
+##                    _logger.debug('HighTemp < CurrentTemp')
+##                    _logger.debug('KillPrint')
+####                    killPrint()
+##                else:
+##                    _logger.debug('HighTemp > CurrentTemp')
+##                    BHighTemp = BCurrentTemp
+####            else:
+####                _logger.debug('HighTemp < MaxTemp')
+##            if (BMaxTemp > BCurrentTemp):
+##                _logger.debug('MaxTemp > CurrentTemp')
+####            else:
+####                BHighTemp = BCurrentTemp
+##        else:
+##            _logger.debug('Bed Turned off.')
+##            if (BCurrentTemp > BMaxTemp):
+####                killPrint()
+##                _logger.debug('KillPrint')
+##
+##        _logger.debug('BSetTemp:')
+##        _logger.debug(BSetTemp)
+##        
+##        _logger.debug('BCurrentTemp:')
+##        _logger.debug(BCurrentTemp)
+##        _logger.debug('BMaxTemp:')
+##        _logger.debug(BMaxTemp)
 ##        if (BCurrentTemp > BMaxTemp):
 ##            _logger.debug('Bed above MaxTemp ------------------------------------------------------------------------------------')
         return
