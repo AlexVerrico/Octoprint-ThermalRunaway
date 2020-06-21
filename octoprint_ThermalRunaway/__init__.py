@@ -48,54 +48,17 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
     ##~~ Temperatures received hook
 
     def check_temps(self, temps):
-        global bHighTemp
         _logger.debug('reached start of check_temps')
-        if (bHighTemp > 0):
-            _logger.debug('HighTemp > 0')
-            bHighTemp = bHighTemp + 1
-        else:
-            _logger.debug('HighTemp =< 0')
-            bHighTemp = 1
-        _logger.debug(bHighTemp)
-##        BMaxDiff = 10
-##        BMaxTemp = 50
-##        BTemps = temps["B"]
-##        BSetTemp = BTemps[1]
-##        BCurrentTemp = BTemps[0]
-##
-##        if (BSetTemp > 0):
-##            _logger.debug('SetTemp > 0')
-##            BMaxTemp = BSetTemp + BMaxDiff
-##            if (BHighTemp > BMaxTemp):
-##                _logger.debug('HighTemp > MaxTemp')
-##                if (BHighTemp < BCurrentTemp):
-##                    _logger.debug('HighTemp < CurrentTemp')
-##                    _logger.debug('KillPrint')
-####                    killPrint()
-##                else:
-##                    _logger.debug('HighTemp > CurrentTemp')
-##                    BHighTemp = BCurrentTemp
-####            else:
-####                _logger.debug('HighTemp < MaxTemp')
-##            if (BMaxTemp > BCurrentTemp):
-##                _logger.debug('MaxTemp > CurrentTemp')
-####            else:
-####                BHighTemp = BCurrentTemp
-##        else:
-##            _logger.debug('Bed Turned off.')
-##            if (BCurrentTemp > BMaxTemp):
-####                killPrint()
-##                _logger.debug('KillPrint')
-##
-##        _logger.debug('BSetTemp:')
-##        _logger.debug(BSetTemp)
-##        
-##        _logger.debug('BCurrentTemp:')
-##        _logger.debug(BCurrentTemp)
-##        _logger.debug('BMaxTemp:')
-##        _logger.debug(BMaxTemp)
-##        if (BCurrentTemp > BMaxTemp):
-##            _logger.debug('Bed above MaxTemp ------------------------------------------------------------------------------------')
+        TMaxTemp = 250.0
+        BMaxTemp = 60.0
+        BTemps = temps["B"]
+        TTemps = temps["T0"]
+        BCurrentTemp = BTemps[0]
+        TCurrentTemp = TTemps[0]
+        if (BCurrentTemp > BMaxTemp):
+            _logger.debug('KillPrint()')
+        if (TCurrentTemp > TMaxTemp):
+            _logger.debug('KillPrint()')
         return
 
     def get_temps(self, comm, parsed_temps):
