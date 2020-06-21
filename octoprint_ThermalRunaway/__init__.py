@@ -63,6 +63,8 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
                     killPrint()
                 else:
                     BHighTemp = 0
+            else:
+                _logger.debug('HighTemp < MaxTemp')
             if (BMaxTemp > BCurrentTemp):
                 _logger.debug('MaxTemp > CurrentTemp')
 ##                return
