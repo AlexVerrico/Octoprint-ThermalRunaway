@@ -22,7 +22,12 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
     def on_after_startup(self):
         global bHighTemp
         bHighTemp = 0
+        return
 
+    def killPrint():
+        octoprint.printer.PrinterInterface.cancel_print()
+        return
+    
     ##~~ SettingsPlugin mixin
 
     def get_settings_defaults(self):
@@ -41,20 +46,23 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
             less=["less/ThermalRunaway.less"]
         )
 
-    def killPrint():
-        octoprint.printer.PrinterInterface.cancel_print()
-        return
 
     ##~~ Temperatures received hook
 
     def check_temps(self, temps):
         _logger.debug('reached start of check_temps')
-        TMaxTemp = 250.0
-        BMaxTemp = 60.0
+        TMaxOffTemp = 250.0
+        BMaxOffTemp = 60.0
+        TMaxDiff = 25.0
+        BMaxDiff = 10.0
         BTemps = temps["B"]
         TTemps = temps["T0"]
         BCurrentTemp = BTemps[0]
+        _logger.debug('BCurrentTemp = ' + BCurrentTemp)
         TCurrentTemp = TTemps[0]
+        BSetTemp = BTemps[1]
+        _logger.debug('BSetTemp = ' + BSetTemp)
+        TSetTemp = TTemps[1]
         if (BCurrentTemp > BMaxTemp):
             _logger.debug('KillPrint()')
         if (TCurrentTemp > TMaxTemp):
@@ -69,16 +77,6 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
             t.start()
             _logger.debug('Spawned new thread.')
         return parsed_temps
-    
-##                BTemp = parsed_temps["B"]
-##                _logger.debug('B tuple = ');
-##                _logger.debug(BTemp)
-##                BCurrentTemp = BTemp[0]
-##                _logger.debug('B Current Temp = ')
-##                _logger.debug(BCurrentTemp)
-##                BSetTemp = BTemp[1]
-##                _logger.debug('B Set Temp = ')
-##                _logger.debug(BSetTemp)
 
     
     ##~~ Softwareupdate hook
