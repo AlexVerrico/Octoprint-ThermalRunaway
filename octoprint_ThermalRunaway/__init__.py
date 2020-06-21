@@ -75,6 +75,7 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
 ##            else:
 ##                BHighTemp = BCurrentTemp
         else:
+            _logger.debug('Bed Turned off.')
             if (BCurrentTemp > BMaxTemp):
 ##                killPrint()
                 _logger.debug('KillPrint')
