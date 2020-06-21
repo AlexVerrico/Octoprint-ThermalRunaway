@@ -19,6 +19,9 @@ _logger = logging.getLogger('octoprint.plugins.ThermalRunaway')
 class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
                            octoprint.plugin.AssetPlugin,
                            octoprint.plugin.TemplatePlugin):
+    def on_after_startup(self):
+        global BHighTemp
+        BHighTemp = 0
 
     ##~~ SettingsPlugin mixin
 
