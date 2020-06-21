@@ -58,7 +58,7 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
         BTemps = temps["B"]
         TTemps = temps["T0"]
         BCurrentTemp = BTemps[0]
-##        _logger.debug('BCurrentTemp = ' + BCurrentTemp)
+        _logger.debug('BCurrentTemp = ' + BCurrentTemp)
         TCurrentTemp = TTemps[0]
         BSetTemp = BTemps[1]
 ##        _logger.debug('BSetTemp = ' + BSetTemp)
