@@ -63,7 +63,8 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
                 _logger.debug('HighTemp > MaxTemp')
                 if (BHighTemp < BCurrentTemp):
                     _logger.debug('HighTemp < CurrentTemp')
-                    killPrint()
+                    _logger.debug('KillPrint')
+##                    killPrint()
                 else:
                     _logger.debug('HighTemp > CurrentTemp')
                     BHighTemp = BCurrentTemp
@@ -71,12 +72,12 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
 ##                _logger.debug('HighTemp < MaxTemp')
             if (BMaxTemp > BCurrentTemp):
                 _logger.debug('MaxTemp > CurrentTemp')
-##                return
 ##            else:
 ##                BHighTemp = BCurrentTemp
         else:
             if (BCurrentTemp > BMaxTemp):
-                killPrint()
+##                killPrint()
+                _logger.debug('KillPrint')
 
         _logger.debug('BSetTemp:')
         _logger.debug(BSetTemp)
@@ -85,8 +86,8 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
         _logger.debug(BCurrentTemp)
         _logger.debug('BMaxTemp:')
         _logger.debug(BMaxTemp)
-        if (BCurrentTemp > BMaxTemp):
-            _logger.debug('Bed above MaxTemp ------------------------------------------------------------------------------------')
+##        if (BCurrentTemp > BMaxTemp):
+##            _logger.debug('Bed above MaxTemp ------------------------------------------------------------------------------------')
         return
 
     def get_temps(self, comm, parsed_temps):
