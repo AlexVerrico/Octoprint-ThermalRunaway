@@ -20,8 +20,8 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
                            octoprint.plugin.AssetPlugin,
                            octoprint.plugin.TemplatePlugin):
     def on_after_startup(self):
-        global BHighTemp
-        BHighTemp = 0
+        global bHighTemp
+        bHighTemp = 0
 
     ##~~ SettingsPlugin mixin
 
@@ -49,14 +49,14 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
 
     def check_temps(self, temps):
         _logger.debug('reached start of check_temps')
-        global BHighTemp
-        if (BHighTemp > 0):
+        global bHighTemp
+        if (bHighTemp > 0):
             _logger.debug('HighTemp > 0')
-            BHighTemp = BHighTemp + 1
+            bHighTemp = bHighTemp + 1
         else:
             _logger.debug('HighTemp =< 0')
-            BHighTemp = 1
-        _logger.debug(BHighTemp)
+            bHighTemp = 1
+        _logger.debug(bHighTemp)
 ##        BMaxDiff = 10
 ##        BMaxTemp = 50
 ##        BTemps = temps["B"]
