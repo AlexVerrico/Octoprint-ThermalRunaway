@@ -77,7 +77,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
         if (bThermalWarning == True):
             _logger.debug('bThermalWarning = True')
             if (bCurrentTemp > bHighTemp):
-##                killPrint()
+                killPrint()
                 _logger.debug('bCurrentTemp > bHighTemp. Called killPrint')
             else:
                 bHighTemp = bCurrentTemp
