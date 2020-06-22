@@ -26,11 +26,6 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
         _logger.debug(bHighTemp)
         _logger.debug('reached end of on_after_startup')
         return
-
-    def killPrint():
-        self._printer.PrinterInterface.cancel_print()
-        _logger.debug('KilledPrint')
-        return
     
     ##~~ SettingsPlugin mixin
 
@@ -57,6 +52,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
         global bHighTemp
         global bThermalWarning
         _logger.debug('reached start of check_temps')
+        emergencyGCode = "M112"
         TMaxOffTemp = 250.0
         bMaxOffTemp = 60.0
         TMaxDiff = 25.0
@@ -77,7 +73,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
         if (bThermalWarning == True):
             _logger.debug('bThermalWarning = True')
             if (bCurrentTemp > bHighTemp):
-                killPrint()
+                self._printer.commands(emergencyGCode)
                 _logger.debug('bCurrentTemp > bHighTemp. Called killPrint')
             else:
                 bHighTemp = bCurrentTemp
