@@ -60,7 +60,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
     def check_temps(self, temps):
         global bHighTemp
         global bThermalWarning
-        theEmergencyGcode = _self.settings.get(["emergencyGcode"])
+        theEmergencyGcode = self._settings.get(["emergencyGcode"])
         _logger.debug('emergencyGcode: ')
         _logger.debug(theEmergencyGcode)
         _logger.debug('reached start of check_temps')
