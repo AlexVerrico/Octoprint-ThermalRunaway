@@ -26,6 +26,7 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
 
     def killPrint():
         octoprint.printer.PrinterInterface.cancel_print()
+        _logger.debug('KilledPrint')
         return
     
     ##~~ SettingsPlugin mixin
@@ -75,6 +76,7 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
             _logger.debug(TMaxTemp)
         if (BCurrentTemp > BMaxTemp):
             _logger.debug('KillPrint()')
+            killPrint()
         if (TCurrentTemp > TMaxTemp):
             _logger.debug('KillPrint()')
         return
