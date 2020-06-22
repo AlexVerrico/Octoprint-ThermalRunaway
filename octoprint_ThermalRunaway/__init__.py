@@ -28,7 +28,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
         return
 
     def killPrint():
-        octoprint.printer.PrinterInterface.cancel_print()
+        self._printer.PrinterInterface.cancel_print()
         _logger.debug('KilledPrint')
         return
     
