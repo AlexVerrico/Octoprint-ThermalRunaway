@@ -16,10 +16,7 @@ import time
 
 _logger = logging.getLogger('octoprint.plugins.ThermalRunaway')
 
-class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
-                           octoprint.plugin.AssetPlugin,
-                           octoprint.plugin.TemplatePlugin,
-                           octoprint.plugin.StartupPlugin):
+class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
     def on_after_startup(self):
         global bHighTemp
         bHighTemp = 0.0
@@ -35,21 +32,21 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
     
     ##~~ SettingsPlugin mixin
 
-    def get_settings_defaults(self):
-        return dict(
-            # put your plugin's default settings here
-        )
+##    def get_settings_defaults(self):
+##        return dict(
+##            # put your plugin's default settings here
+##        )
 
     ##~~ AssetPlugin mixin
 
-    def get_assets(self):
-        # Define your plugin's asset files to automatically include in the
-        # core UI here.
-        return dict(
-            js=["js/ThermalRunaway.js"],
-            css=["css/ThermalRunaway.css"],
-            less=["less/ThermalRunaway.less"]
-        )
+##    def get_assets(self):
+##        # Define your plugin's asset files to automatically include in the
+##        # core UI here.
+##        return dict(
+##            js=["js/ThermalRunaway.js"],
+##            css=["css/ThermalRunaway.css"],
+##            less=["less/ThermalRunaway.less"]
+##        )
 
 
     ##~~ Temperatures received hook
