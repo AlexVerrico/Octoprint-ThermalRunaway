@@ -19,10 +19,12 @@ _logger = logging.getLogger('octoprint.plugins.ThermalRunaway')
 class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
     def on_after_startup(self):
         global bHighTemp
+        global bThermalWarning
         bHighTemp = 0.0
+        bThermalWarning = False
         _logger.debug('bHighTemp = ')
         _logger.debug(bHighTemp)
-        _logger.debug('reached end on on_after_startup')
+        _logger.debug('reached end of on_after_startup')
         return
 
     def killPrint():
@@ -53,6 +55,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
 
     def check_temps(self, temps):
         global bHighTemp
+        global bThermalWarning
         _logger.debug('reached start of check_temps')
         TMaxOffTemp = 250.0
         BMaxOffTemp = 60.0
@@ -71,6 +74,14 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
         _logger.debug('old bHighTemp = ')
         _logger.debug(bHighTemp)
 ##        bHighTemp += 1.0
+        if (bThermalWarning == True):
+            _logger.debug('bThermalWarning = True')
+            if (bCurrentTemp > bHighTemp):
+##                killPrint()
+                _logger.debug('bCurrentTemp > bHighTemp. Called killPrint')
+            else:
+                bHighTemp = BCurrentTemp
+            bThermalWarning = False
         if (BSetTemp > 0.0):
             BMaxTemp = BSetTemp + BMaxDiff
             _logger.debug('BMaxTemp = ')
@@ -85,9 +96,10 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
             bHighTemp = BCurrentTemp
             _logger.debug('BCurrentTemp > BMaxTemp, set bHighTemp to BCurrentTemp. New bHighTemp = ')
             _logger.debug(bHighTemp)
+            bThermalWarning = True
+            _logger.debug('set bThermalWarning to True')
         if (TCurrentTemp > TMaxTemp):
             _logger.debug('KillPrint()')
-##            if (
         return
 
     def get_temps(self, comm, parsed_temps):
