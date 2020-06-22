@@ -58,18 +58,18 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
         global bThermalWarning
         _logger.debug('reached start of check_temps')
         TMaxOffTemp = 250.0
-        BMaxOffTemp = 60.0
+        bMaxOffTemp = 60.0
         TMaxDiff = 25.0
-        BMaxDiff = 10.0
-        BTemps = temps["B"]
+        bMaxDiff = 10.0
+        bTemps = temps["B"]
         TTemps = temps["T0"]
-        BCurrentTemp = BTemps[0]
-        _logger.debug('BCurrentTemp = ')
-        _logger.debug(BCurrentTemp)
+        bCurrentTemp = bTemps[0]
+        _logger.debug('bCurrentTemp = ')
+        _logger.debug(bCurrentTemp)
         TCurrentTemp = TTemps[0]
-        BSetTemp = BTemps[1]
-        _logger.debug('BSetTemp = ')
-        _logger.debug(BSetTemp)
+        bSetTemp = bTemps[1]
+        _logger.debug('bSetTemp = ')
+        _logger.debug(bSetTemp)
         TSetTemp = TTemps[1]
         _logger.debug('old bHighTemp = ')
         _logger.debug(bHighTemp)
@@ -80,21 +80,21 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
 ##                killPrint()
                 _logger.debug('bCurrentTemp > bHighTemp. Called killPrint')
             else:
-                bHighTemp = BCurrentTemp
+                bHighTemp = bCurrentTemp
             bThermalWarning = False
-        if (BSetTemp > 0.0):
-            BMaxTemp = BSetTemp + BMaxDiff
-            _logger.debug('BMaxTemp = ')
-            _logger.debug(BMaxTemp)
+        if (bSetTemp > 0.0):
+            bMaxTemp = bSetTemp + bMaxDiff
+            _logger.debug('bMaxTemp = ')
+            _logger.debug(bMaxTemp)
         if (TSetTemp > 0.0):
             TMaxTemp = TSetTemp + TMaxDiff
             _logger.debug('TMaxTemp = ')
             _logger.debug(TMaxTemp)
-        if (BCurrentTemp > BMaxTemp):
+        if (bCurrentTemp > bMaxTemp):
 ##            _logger.debug('KillPrint()')
 ##            killPrint()
-            bHighTemp = BCurrentTemp
-            _logger.debug('BCurrentTemp > BMaxTemp, set bHighTemp to BCurrentTemp. New bHighTemp = ')
+            bHighTemp = bCurrentTemp
+            _logger.debug('bCurrentTemp > bMaxTemp, set bHighTemp to bCurrentTemp. New bHighTemp = ')
             _logger.debug(bHighTemp)
             bThermalWarning = True
             _logger.debug('set bThermalWarning to True')
