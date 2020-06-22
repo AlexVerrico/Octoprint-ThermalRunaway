@@ -70,6 +70,8 @@ class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
         _logger.debug('BSetTemp = ')
         _logger.debug(BSetTemp)
         TSetTemp = TTemps[1]
+        _logger.debug('bHighTemp = ')
+        _logger.debug(bHighTemp)
         if (BSetTemp > 0.0):
             BMaxTemp = BSetTemp + BMaxDiff
             _logger.debug('BMaxTemp = ')
