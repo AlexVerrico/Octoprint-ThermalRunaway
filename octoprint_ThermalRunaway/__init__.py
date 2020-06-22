@@ -38,10 +38,10 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
 
     ##~~ TemplatePlugin mixin
 
-##    def get_template_configs(self):
-##        return [
-##            dict(type="settings", custom_bindings=False)
-##        ]
+    def get_template_configs(self):
+        return [
+            dict(type="settings")
+        ]
 
     ##~~ AssetPlugin mixin
 
