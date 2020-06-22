@@ -18,10 +18,14 @@ _logger = logging.getLogger('octoprint.plugins.ThermalRunaway')
 
 class ThermalRunawayPlugin(octoprint.plugin.SettingsPlugin,
                            octoprint.plugin.AssetPlugin,
-                           octoprint.plugin.TemplatePlugin):
+                           octoprint.plugin.TemplatePlugin,
+                           octoprint.plugin.StartupPlugin):
     def on_after_startup(self):
         global bHighTemp
-        bHighTemp = 0
+        bHighTemp = 0.0
+        _logger.debug('bHighTemp = ')
+        _logger.debug(bHighTemp)
+        _logger.debug('reached end on on_after_startup')
         return
 
     def killPrint():
