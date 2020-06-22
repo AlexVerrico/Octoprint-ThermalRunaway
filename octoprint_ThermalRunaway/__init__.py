@@ -16,7 +16,9 @@ import time
 
 _logger = logging.getLogger('octoprint.plugins.ThermalRunaway')
 
-class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
+class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
+                           octoprint.plugin.SettingsPlugin,
+                           octoprint.plugin.TemplatePlugin):
     def on_after_startup(self):
         global bHighTemp
         global bThermalWarning
@@ -29,10 +31,19 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
     
     ##~~ SettingsPlugin mixin
 
-##    def get_settings_defaults(self):
-##        return dict(
-##            # put your plugin's default settings here
-##        )
+    def get_settings_defaults(self):
+        return dict(
+            bMaxOffTemp=20,
+            bMaxDiff=10,
+            emergencyGcode="M112"
+        )
+
+    ##~~ TemplatePlugin mixin
+
+##    def get_template_configs(self):
+##        return [
+##            dict(type="settings", custom_bindings=False)
+##        ]
 
     ##~~ AssetPlugin mixin
 
@@ -51,6 +62,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
     def check_temps(self, temps):
         global bHighTemp
         global bThermalWarning
+        theEmergencyGcode = _self.settings.get(["emergencyGcode"])
         _logger.debug('reached start of check_temps')
         emergencyGCode = "M112"
         TMaxOffTemp = 250.0
@@ -69,7 +81,6 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
         TSetTemp = TTemps[1]
         _logger.debug('old bHighTemp = ')
         _logger.debug(bHighTemp)
-##        bHighTemp += 1.0
         if (bThermalWarning == True):
             _logger.debug('bThermalWarning = True')
             if (bCurrentTemp > bHighTemp):
@@ -88,8 +99,6 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin):
             _logger.debug('TMaxTemp = ')
             _logger.debug(TMaxTemp)
         if (bCurrentTemp > bMaxTemp):
-##            _logger.debug('KillPrint()')
-##            killPrint()
             bHighTemp = bCurrentTemp
             _logger.debug('bCurrentTemp > bMaxTemp, set bHighTemp to bCurrentTemp. New bHighTemp = ')
             _logger.debug(bHighTemp)
