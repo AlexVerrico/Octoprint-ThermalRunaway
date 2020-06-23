@@ -16,6 +16,12 @@
 			<br/><br/>
 			Maximum temp that the hotend is allowed to reach while turned off before triggering a Thermal Runaway:<br/>
 			<input type="text" data-bind="value: settings.plugins.ThermalRunaway.tMaxOffTemp">
+			<br/><br/>
+			Maximum time in seconds that the hotend is allowed to be outside of min/max values (set temp -/+ maximum difference) before triggering a Thermal Runaway:<br/>
+			<input type="text" data-bind="value: settings.plugins.ThermalRunaway.tDelay">
+			<br/><br/>
+			Maximum time in seconds that the bed is allowed to be outside of min/max values (set temp -/+ maximum difference) before triggering a Thermal Runaway:<br/>
+			<input type="text" data-bind="value: settings.plugins.ThermalRunaway.bDelay">
         </div>
     </div>
 </form>
