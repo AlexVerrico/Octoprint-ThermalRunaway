@@ -21,9 +21,9 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
                            octoprint.plugin.TemplatePlugin):
     def on_after_startup(self):
         global bHighTemp
-        global bThermalWarning
+        global bThermalHighWarning
         bHighTemp = 0.0
-        bThermalWarning = False
+        bThermalHighWarning = False
         _logger.debug('bHighTemp = ')
         _logger.debug(bHighTemp)
         _logger.debug('reached end of on_after_startup')
@@ -60,54 +60,57 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
     ##~~ Temperatures received hook
 
     def check_temps(self, temps):
+        _logger.debug('reached start of check_temps')
         global bHighTemp
-        global bThermalWarning
+        global bThermalHighWarning
 ##        theEmergencyGcode = self._settings.get(["emergencyGcode"])
 ##        _logger.debug('emergencyGcode: ')
 ##        _logger.debug(theEmergencyGcode)
-        _logger.debug('reached start of check_temps')
         emergencyGCode = self._settings.get(["emergencyGcode"])
-        TMaxOffTemp = 250.0
+##        TMaxOffTemp = 250.0
         bMaxOffTemp = 20
-        TMaxDiff = 25.0
+##        TMaxDiff = 25.0
         bMaxDiff = 10
         bTemps = temps["B"]
-        TTemps = temps["T0"]
+##        TTemps = temps["T0"]
         bCurrentTemp = bTemps[0]
         _logger.debug('bCurrentTemp = ')
         _logger.debug(bCurrentTemp)
-        TCurrentTemp = TTemps[0]
+##        TCurrentTemp = TTemps[0]
         bSetTemp = bTemps[1]
         _logger.debug('bSetTemp = ')
         _logger.debug(bSetTemp)
-        TSetTemp = TTemps[1]
+##        TSetTemp = TTemps[1]
         _logger.debug('old bHighTemp = ')
         _logger.debug(bHighTemp)
-        if (bThermalWarning == True):
-            _logger.debug('bThermalWarning = True')
+        if (bThermalHighWarning == True):
+            _logger.debug('bThermalHighWarning = True')
             if (bCurrentTemp > bHighTemp):
                 self._printer.commands(emergencyGCode)
-                _logger.debug('bCurrentTemp > bHighTemp. Called killPrint')
+                _logger.debug('bCurrentTemp > bHighTemp. Sent emergencyGCode to printer')
             else:
                 bHighTemp = bCurrentTemp
-            bThermalWarning = False
-            _logger.debug('set bThermalWarning to False')
+            bThermalHighWarning = False
+            _logger.debug('set bThermalHighWarning to False')
         if (bSetTemp > 0.0):
             bMaxTemp = bSetTemp + bMaxDiff
             _logger.debug('bMaxTemp = ')
             _logger.debug(bMaxTemp)
-        if (TSetTemp > 0.0):
-            TMaxTemp = TSetTemp + TMaxDiff
-            _logger.debug('TMaxTemp = ')
-            _logger.debug(TMaxTemp)
+            bMinTemp = bSetTemp - bMaxDiff
+            _logger.debug('bMinTemp = ')
+            _logger.debug(bMinTemp)
+##        if (TSetTemp > 0.0):
+##            TMaxTemp = TSetTemp + TMaxDiff
+##            _logger.debug('TMaxTemp = ')
+##            _logger.debug(TMaxTemp)
         if (bCurrentTemp > bMaxTemp):
             bHighTemp = bCurrentTemp
             _logger.debug('bCurrentTemp > bMaxTemp, set bHighTemp to bCurrentTemp. New bHighTemp = ')
             _logger.debug(bHighTemp)
-            bThermalWarning = True
-            _logger.debug('set bThermalWarning to True')
-        if (TCurrentTemp > TMaxTemp):
-            _logger.debug('KillPrint()')
+            bThermalHighWarning = True
+            _logger.debug('set bThermalHighWarning to True')
+##        if (TCurrentTemp > TMaxTemp):
+##            _logger.debug('KillPrint()')
         return
 
     def get_temps(self, comm, parsed_temps):
