@@ -64,7 +64,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         _logger.debug('emergencyGcode: ')
         _logger.debug(theEmergencyGcode)
         _logger.debug('reached start of check_temps')
-        emergencyGCode = "M112"
+        emergencyGCode = self._settings.get(["emergencyGcode"])
         TMaxOffTemp = 250.0
         bMaxOffTemp = 60
         TMaxDiff = 25.0
