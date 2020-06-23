@@ -5,17 +5,16 @@
 			The GCode command to be sent to the printer when a thermal runaway is detected, defaults to M112 which is the Marlin Emergency Stop command
 			<input type="text" data-bind="value: settings.plugins.ThermalRunaway.emergencyGcode">
 			<h5>Temperatures</h5>
-			<br/>
-			Maximum amount that the bed temp is allowed to differ from the set temp before triggering a Thermal Runaway:
+			Maximum amount that the bed temp is allowed to differ from the set temp before triggering a Thermal Runaway:<br/>
 			<input type="text" data-bind="value: settings.plugins.ThermalRunaway.bMaxDiff">
-			<br/>
-			Maximum amount that the hotend temp is allowed to differ from the set temp before triggering a Thermal Runaway:
+			<br/><br/>
+			Maximum amount that the hotend temp is allowed to differ from the set temp before triggering a Thermal Runaway:<br/>
 			<input type="text" data-bind="value: settings.plugins.ThermalRunaway.tMaxDiff">
-			<br/>
-			Maximum temp that the bed is allowed to reach while turned off before triggering a Thermal Runaway:
+			<br/><br/>
+			Maximum temp that the bed is allowed to reach while turned off before triggering a Thermal Runaway:<br/>
 			<input type="text" data-bind="value: settings.plugins.ThermalRunaway.bMaxOffTemp">
-			<br/>
-			Maximum temp that the hotend is allowed to reach while turned off before triggering a Thermal Runaway:
+			<br/><br/>
+			Maximum temp that the hotend is allowed to reach while turned off before triggering a Thermal Runaway:<br/>
 			<input type="text" data-bind="value: settings.plugins.ThermalRunaway.tMaxOffTemp">
         </div>
     </div>
