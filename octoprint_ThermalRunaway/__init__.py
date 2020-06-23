@@ -80,6 +80,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         
         tMaxDiffStr = self._settings.get(["tMaxDiff"])
         bMaxDiffStr = self._settings.get(["bMaxDiff"])
+        _logger.debug('got all values from settings')
 
         bMaxDiff = float(bMaxDiffStr)
         _logger.debug('bMaxDiff = ',bMaxDiff)
