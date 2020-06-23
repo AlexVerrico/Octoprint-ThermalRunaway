@@ -1,14 +1,6 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-### (Don't forget to remove me)
-# This is a basic skeleton for your plugin's __init__.py. You probably want to adjust the class name of your plugin
-# as well as the plugin mixins it's subclassing from. This is really just a basic skeleton to get you started,
-# defining your plugin as a template plugin, settings and asset plugin. Feel free to add or remove mixins
-# as necessary.
-#
-# Take a look at the documentation on what other plugin mixins are available.
-
 import octoprint.plugin
 import logging
 import threading
@@ -32,8 +24,6 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         tHighTemp = 0.0
         tThermalHighWarning = False
         tThermalHighAlert = False
-##        _logger.debug('bHighTemp = ')
-##        _logger.debug(bHighTemp)
         _logger.debug('reached end of on_after_startup')
         return
     
@@ -56,18 +46,6 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         return [
             dict(type="settings", custom_bindings=False)
         ]
-
-    ##~~ AssetPlugin mixin
-
-##    def get_assets(self):
-##        # Define your plugin's asset files to automatically include in the
-##        # core UI here.
-##        return dict(
-##            js=["js/ThermalRunaway.js"],
-##            css=["css/ThermalRunaway.css"],
-##            less=["less/ThermalRunaway.less"]
-##        )
-
 
     ##~~ Temperatures received hook
 
@@ -117,17 +95,14 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         _logger.debug(tTemps)        
         
         bCurrentTemp = bTemps[0]
-##        _logger.debug('bCurrentTemp = ')
-##        _logger.debug(bCurrentTemp)
         tCurrentTemp = tTemps[0]
         
         bSetTemp = bTemps[1]
-##        _logger.debug('bSetTemp = ')
-##        _logger.debug(bSetTemp)
         tSetTemp = tTemps[1]
 
         _logger.debug("Got all values. Beginning to run through if statements...")
 
+        ## Check if tThermalHighAlert = True
         if (tThermalHighAlert == True):
             _logger.debug('tThermalHighAlert = True')
             if (tCurrentTemp > tHighTemp):
@@ -138,6 +113,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             tThermalHighAlert = False
             _logger.debug('set tThermalHighAlert to False')
 
+        ## Check if bThermalHighAlert = True
         if (bThermalHighAlert == True):
             _logger.debug('bThermalHighAlert = True')
             if (bCurrentTemp > bHighTemp):
@@ -173,9 +149,8 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
                 tHighTemp = tCurrentTemp
             tThermalHighWarning = False
             _logger.debug('set tThermalHighWarning to False')
-            
 
-        ## Check if the bed target temp is set to something greater than 0
+        ## If the bed is turned on then set bMaxTemp and bMinTemp
         if (bSetTemp > 0.0):
             bMaxTemp = bSetTemp + bMaxDiff
             _logger.debug('bMaxTemp = ')
@@ -184,13 +159,12 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             _logger.debug('bMinTemp = ')
             _logger.debug(bMinTemp)
 
-        if (tSetTemp <= 0.0):
-            tMaxTemp = tMaxOffTemp
-            
+        ## If the bed is turned off then set bMaxTemp to bMaxOffTemp
         if (bSetTemp <= 0.0):
             bMaxTemp = bMaxOffTemp
+            bMinTemp = 0.0
         
-        ## Check if the tool target temp is set to something greater than 0
+        ## If the hotend is turned on then set tMaxTemp and tMinTemp
         if (tSetTemp > 0.0):
             tMaxTemp = tSetTemp + tMaxDiff
             _logger.debug('tMaxTemp = ')
@@ -199,6 +173,12 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             _logger.debug('tMinTemp = ')
             _logger.debug(tMinTemp)
 
+        ## If the hotend is turned off then set tMaxTemp to tMaxOffTemp
+        if (tSetTemp <= 0.0):
+            tMaxTemp = tMaxOffTemp
+            tMinTemp = 0.0
+
+        ## If the current temp of the bed is higher than the max allowed temp then set bThermalHighWarning to True
         if (bCurrentTemp > bMaxTemp):
             bHighTemp = bCurrentTemp
             _logger.debug('bCurrentTemp > bMaxTemp, set bHighTemp to bCurrentTemp. New bHighTemp = ')
@@ -206,13 +186,15 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             bThermalHighWarning = True
             _logger.debug('set bThermalHighWarning to True')
 
+        ## If the current temp of the hotend is higher than the max allowed temp then set tThermalHighWarning to True
         if (tCurrentTemp > tMaxTemp):
             tHighTemp = tCurrentTemp
             _logger.debug('tCurrentTemp > tMaxTemp, set tHighTemp to tCurrentTemp. New tHighTemp = ')
             _logger.debug(tHighTemp)
             tThermalHighWarning = True
             _logger.debug('set tThermalHighWarning to True')
-            
+
+        ## Log that we have reached the end of check_temps
         _logger.debug('Reached end of check_temps')
         return
 
@@ -248,18 +230,10 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             )
         )
 
-
-# If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
-# ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
-# can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
 ##__plugin_name__ = "Thermalrunaway Plugin"
 
-# Starting with OctoPrint 1.4.0 OctoPrint will also support to run under Python 3 in addition to the deprecated
-# Python 2. New plugins should make sure to run under both versions for now. Uncomment one of the following
-# compatibility flags according to what Python versions your plugin supports!
-#__plugin_pythoncompat__ = ">=2.7,<3" # only python 2
 __plugin_pythoncompat__ = ">=3,<4" # only python 3
-#__plugin_pythoncompat__ = ">=2.7,<4" # python 2 and 3
+#__plugin_pythoncompat__ = ">=2.7,<4" # python 2 and 3 (possibly would work but can't test currently)
 
 def __plugin_load__():
     global __plugin_implementation__
