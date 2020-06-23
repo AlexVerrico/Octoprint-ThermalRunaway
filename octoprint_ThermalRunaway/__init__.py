@@ -82,7 +82,8 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         bMaxDiff = self._settings.get(["bMaxDiff"])
         
         bTemps = temps["B"]
-        tTemps = temps["T0"]
+##        tTemps = temps["T0"]
+        tTemps = bTemps
         
         bCurrentTemp = bTemps[0]
 ##        _logger.debug('bCurrentTemp = ')
