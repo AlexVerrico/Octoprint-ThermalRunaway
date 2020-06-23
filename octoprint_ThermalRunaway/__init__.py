@@ -33,7 +33,9 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
 
     def get_settings_defaults(self):
         return dict(
-            emergencyGcode="M112"
+            emergencyGcode="M112",
+            bMaxDiff="10",
+            bMaxOffTemp="20"
         )
 
     ##~~ TemplatePlugin mixin
@@ -60,13 +62,13 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
     def check_temps(self, temps):
         global bHighTemp
         global bThermalWarning
-        theEmergencyGcode = self._settings.get(["emergencyGcode"])
-        _logger.debug('emergencyGcode: ')
-        _logger.debug(theEmergencyGcode)
+##        theEmergencyGcode = self._settings.get(["emergencyGcode"])
+##        _logger.debug('emergencyGcode: ')
+##        _logger.debug(theEmergencyGcode)
         _logger.debug('reached start of check_temps')
         emergencyGCode = self._settings.get(["emergencyGcode"])
         TMaxOffTemp = 250.0
-        bMaxOffTemp = 60
+        bMaxOffTemp = 20
         TMaxDiff = 25.0
         bMaxDiff = 10
         bTemps = temps["B"]
