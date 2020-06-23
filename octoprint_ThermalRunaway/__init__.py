@@ -87,8 +87,14 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         _logger.debug('bMaxDiff = ')
         _logger.debug(bMaxDiff)
         tMaxDiff = float(tMaxDiffStr)
+        _logger.debug('tMaxDiff = ')
+        _logger.debug(tMaxDiff)
         bMaxOffTemp = float(bMaxOffTempStr)
-        tMaxOffTemp = float(btMaxOffTempStr)
+        _logger.debug('bMaxOffTemp = ')
+        _logger.debug(bMaxOffTemp)
+        tMaxOffTemp = float(tMaxOffTempStr)
+        _logger.debug('tMaxOffTemp = ')
+        _logger.debug(tMaxOffTemp)
         
         bTemps = temps["B"]
 ##        tTemps = temps["T0"]
