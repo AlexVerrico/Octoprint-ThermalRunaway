@@ -66,7 +66,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
     ##~~ Temperatures received hook
 
     def check_temps(self, temps):
-        _logger.debug('reached start of check_temps')
+        _logger.debug('Reached start of check_temps')
         
         global bHighTemp
         global bThermalHighWarning
@@ -141,6 +141,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             
 ##        if (tCurrentTemp > tMaxTemp):
 ##            _logger.debug('KillPrint()')
+            _logger.debug('Reached end of check_temps')
         return
 
     def get_temps(self, comm, parsed_temps):
