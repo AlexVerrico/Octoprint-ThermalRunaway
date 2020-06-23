@@ -101,9 +101,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         _logger.debug(bTemps)
         tTemps = temps["T0"]
         _logger.debug('tTemps: ')
-        _logger.debug(tTemps)
-##        tTemps = bTemps
-        
+        _logger.debug(tTemps)        
         
         bCurrentTemp = bTemps[0]
 ##        _logger.debug('bCurrentTemp = ')
@@ -157,7 +155,8 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             _logger.debug('tMinTemp = ')
             _logger.debug(tMinTemp)
 
-        ##
+        _logger.debug('After tSetTemp > 0.0')
+
         if (bCurrentTemp > bMaxTemp):
             bHighTemp = bCurrentTemp
             _logger.debug('bCurrentTemp > bMaxTemp, set bHighTemp to bCurrentTemp. New bHighTemp = ')
@@ -165,7 +164,8 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             bThermalHighWarning = True
             _logger.debug('set bThermalHighWarning to True')
 
-        ##
+        _logger.debug('After bCurrentTemp > bMaxTemp')
+
         if (tCurrentTemp > tMaxTemp):
             tHighTemp = tCurrentTemp
             _logger.debug('tCurrentTemp > tMaxTemp, set tHighTemp to tCurrentTemp. New tHighTemp = ')
@@ -173,7 +173,6 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             tThermalHighWarning = True
             _logger.debug('set tThermalHighWarning to True')
             
-        ##
         _logger.debug('Reached end of check_temps')
         return
 
