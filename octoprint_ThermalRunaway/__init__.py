@@ -43,9 +43,9 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         return dict(
             emergencyGcode="M112",
             bMaxDiff="10",
-            bMaxOffTemp="20",
+            bMaxOffTemp="30",
             tMaxDiff="20",
-            tMaxOffTemp="20",
+            tMaxOffTemp="30",
             tDelay="5",
             bDelay="10"
         )
@@ -152,8 +152,10 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         if (bThermalHighWarning == True):
             _logger.debug('bThermalHighWarning = True')
             if (bCurrentTemp > bHighTemp):
+                _logger.debug('setting bThermalHighAlert to True...')
                 time.sleep(bDelay)
                 bThermalHighAlert = True
+                _logger.debug('set tThermalHighAlert to True')
             else:
                 bHighTemp = bCurrentTemp
             bThermalHighWarning = False
@@ -163,8 +165,10 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         if (tThermalHighWarning == True):
             _logger.debug('tThermalHighWarning = True')
             if (tCurrentTemp > tHighTemp):
+                _logger.debug('setting tThermalHighAlert to True...')
                 time.sleep(tDelay)
                 tThermalHighAlert = True
+                _logger.debug('set tThermalHighAlert to True')
             else:
                 tHighTemp = tCurrentTemp
             tThermalHighWarning = False
