@@ -87,12 +87,12 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         bCurrentTemp = bTemps[0]
 ##        _logger.debug('bCurrentTemp = ')
 ##        _logger.debug(bCurrentTemp)
-        tCurrentTemp = TTemps[0]
+        tCurrentTemp = tTemps[0]
         
         bSetTemp = bTemps[1]
 ##        _logger.debug('bSetTemp = ')
 ##        _logger.debug(bSetTemp)
-        tSetTemp = TTemps[1]
+        tSetTemp = tTemps[1]
 
         _logger.debug("Got all values. Beginning to run through if statements...")
 
