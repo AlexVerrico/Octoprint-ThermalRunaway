@@ -34,8 +34,8 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
     def get_settings_defaults(self):
         return dict(
             emergencyGcode="M112",
-            bMaxDiff="10",
-            bMaxOffTemp="20"
+            bMaxDiff="10.0",
+            bMaxOffTemp="20.0"
         )
 
     ##~~ TemplatePlugin mixin
