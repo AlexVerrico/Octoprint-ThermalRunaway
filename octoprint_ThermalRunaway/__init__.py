@@ -141,7 +141,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             
 ##        if (tCurrentTemp > tMaxTemp):
 ##            _logger.debug('KillPrint()')
-            _logger.debug('Reached end of check_temps')
+        _logger.debug('Reached end of check_temps')
         return
 
     def get_temps(self, comm, parsed_temps):
