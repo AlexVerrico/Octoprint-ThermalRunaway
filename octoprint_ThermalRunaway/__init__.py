@@ -45,7 +45,9 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             bMaxDiff="10",
             bMaxOffTemp="20",
             tMaxDiff="20",
-            tMaxOffTemp="20"
+            tMaxOffTemp="20",
+            tDelay="5",
+            bDelay="10"
         )
 
     ##~~ TemplatePlugin mixin
@@ -83,6 +85,9 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         
         tMaxOffTempStr = self._settings.get(["tMaxOffTemp"])
         bMaxOffTempStr = self._settings.get(["bMaxOffTemp"])
+
+        bDelayStr = self._settings.get(["bDelay"])
+        tDelayStr = self._settings.get(["tDelay"])
         
         tMaxDiffStr = self._settings.get(["tMaxDiff"])
         bMaxDiffStr = self._settings.get(["bMaxDiff"])
@@ -101,6 +106,8 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         tMaxOffTemp = float(tMaxOffTempStr)
         _logger.debug('tMaxOffTemp = ')
         _logger.debug(tMaxOffTemp)
+        bDelay = int(bDelayStr)
+        tDelay = int(tDelayStr)
         
         bTemps = temps["B"]
         _logger.debug('bTemps: ')
@@ -145,9 +152,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         if (bThermalHighWarning == True):
             _logger.debug('bThermalHighWarning = True')
             if (bCurrentTemp > bHighTemp):
-##                self._printer.commands(emergencyGCode)
-##                _logger.debug('bCurrentTemp > bHighTemp. Sent emergencyGCode to printer')
-                time.sleep(5)
+                time.sleep(bDelay)
                 bThermalHighAlert = True
             else:
                 bHighTemp = bCurrentTemp
@@ -158,11 +163,8 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         if (tThermalHighWarning == True):
             _logger.debug('tThermalHighWarning = True')
             if (tCurrentTemp > tHighTemp):
-##                self._printer.commands(emergencyGCode)
-##                _logger.debug('tCurrentTemp > tHighTemp. Sent emergencyGCode to printer')
-                time.sleep(5)
+                time.sleep(tDelay)
                 tThermalHighAlert = True
-                _logger.debug('set tThermalHighAlert to True')
             else:
                 tHighTemp = tCurrentTemp
             tThermalHighWarning = False
