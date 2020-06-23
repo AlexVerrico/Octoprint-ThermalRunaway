@@ -61,16 +61,15 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
 
     def check_temps(self, temps):
         _logger.debug('reached start of check_temps')
+        
         global bHighTemp
         global bThermalHighWarning
-##        theEmergencyGcode = self._settings.get(["emergencyGcode"])
-##        _logger.debug('emergencyGcode: ')
-##        _logger.debug(theEmergencyGcode)
+        
         emergencyGCode = self._settings.get(["emergencyGcode"])
 ##        TMaxOffTemp = 250.0
-        bMaxOffTemp = 20
+        bMaxOffTemp = self._settings.get(["bMaxOffTemp"])
 ##        TMaxDiff = 25.0
-        bMaxDiff = 10
+        bMaxDiff = self._settings.get(["bMaxDiff"])
         bTemps = temps["B"]
 ##        TTemps = temps["T0"]
         bCurrentTemp = bTemps[0]
@@ -83,6 +82,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
 ##        TSetTemp = TTemps[1]
         _logger.debug('old bHighTemp = ')
         _logger.debug(bHighTemp)
+        
         if (bThermalHighWarning == True):
             _logger.debug('bThermalHighWarning = True')
             if (bCurrentTemp > bHighTemp):
