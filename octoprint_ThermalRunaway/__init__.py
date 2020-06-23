@@ -22,12 +22,16 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
     def on_after_startup(self):
         global bHighTemp
         global bThermalHighWarning
+        global bThermalHighAlert
         global tHighTemp
         global tThermalHighWarning
+        global tThermalHighAlert
         bHighTemp = 0.0
         bThermalHighWarning = False
+        bThermalHighAlert = False
         tHighTemp = 0.0
         tThermalHighWarning = False
+        tThermalHighAlert = False
 ##        _logger.debug('bHighTemp = ')
 ##        _logger.debug(bHighTemp)
         _logger.debug('reached end of on_after_startup')
@@ -70,8 +74,10 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         
         global bHighTemp
         global bThermalHighWarning
+        global bThermalHighAlert
         global tHighTemp
         global tThermalHighWarning
+        global tThermalHighAlert
         
         emergencyGCode = self._settings.get(["emergencyGcode"])
         
@@ -115,12 +121,33 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
 
         _logger.debug("Got all values. Beginning to run through if statements...")
 
+        if (tThermalHighAlert == True):
+            _logger.debug('tThermalHighAlert = True')
+            if (tCurrentTemp > tHighTemp):
+                self._printer.commands(emergencyGCode)
+                _logger.debug('tCurrentTemp > tHighTemp. Sent emergencyGCode to printer')
+            else:
+                tHighTemp = tCurrentTemp
+            tThermalHighAlert = False
+            _logger.debug('set tThermalHighAlert to False')
+
+        if (bThermalHighAlert == True):
+            _logger.debug('bThermalHighAlert = True')
+            if (bCurrentTemp > bHighTemp):
+                self._printer.commands(emergencyGCode)
+                _logger.debug('bCurrentTemp > bHighTemp. Sent emergencyGCode to printer')
+            else:
+                bHighTemp = bCurrentTemp
+            bThermalHighAlert = False
+            _logger.debug('set bThermalHighAlert to False')
+
         ## Check if bThermalWarning is set to True
         if (bThermalHighWarning == True):
             _logger.debug('bThermalHighWarning = True')
             if (bCurrentTemp > bHighTemp):
-                self._printer.commands(emergencyGCode)
-                _logger.debug('bCurrentTemp > bHighTemp. Sent emergencyGCode to printer')
+##                self._printer.commands(emergencyGCode)
+##                _logger.debug('bCurrentTemp > bHighTemp. Sent emergencyGCode to printer')
+                bThermalHighAlert = True
             else:
                 bHighTemp = bCurrentTemp
             bThermalHighWarning = False
@@ -130,12 +157,14 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         if (tThermalHighWarning == True):
             _logger.debug('tThermalHighWarning = True')
             if (tCurrentTemp > tHighTemp):
-                self._printer.commands(emergencyGCode)
-                _logger.debug('tCurrentTemp > tHighTemp. Sent emergencyGCode to printer')
+##                self._printer.commands(emergencyGCode)
+##                _logger.debug('tCurrentTemp > tHighTemp. Sent emergencyGCode to printer')
+                tThermalHighAlert = True
             else:
                 tHighTemp = tCurrentTemp
             tThermalHighWarning = False
             _logger.debug('set tThermalHighWarning to False')
+            
 
         ## Check if the bed target temp is set to something greater than 0
         if (bSetTemp > 0.0):
@@ -161,22 +190,12 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             _logger.debug('tMinTemp = ')
             _logger.debug(tMinTemp)
 
-##        bMaxTempInt = int(bMaxTemp)
-##        tMaxTempInt = int(tMaxTemp)
-
-##        bCurrentTempInt = int(bCurrentTemp)
-##        tCurrentTempInt = int(tCurrentTemp)
-        _logger.debug('After tSetTemp > 0.0')
-        
-
         if (bCurrentTemp > bMaxTemp):
             bHighTemp = bCurrentTemp
             _logger.debug('bCurrentTemp > bMaxTemp, set bHighTemp to bCurrentTemp. New bHighTemp = ')
             _logger.debug(bHighTemp)
             bThermalHighWarning = True
             _logger.debug('set bThermalHighWarning to True')
-
-        _logger.debug('After bCurrentTemp > bMaxTemp')
 
         if (tCurrentTemp > tMaxTemp):
             tHighTemp = tCurrentTemp
