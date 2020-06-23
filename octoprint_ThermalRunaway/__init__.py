@@ -38,10 +38,10 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
     def get_settings_defaults(self):
         return dict(
             emergencyGcode="M112",
-            bMaxDiff=10,
-            bMaxOffTemp=20,
-            tMaxDiff=20,
-            tMaxOffTemp=20
+            bMaxDiff="10",
+            bMaxOffTemp="20",
+            tMaxDiff="20",
+            tMaxOffTemp="20"
         )
 
     ##~~ TemplatePlugin mixin
@@ -75,11 +75,16 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         
         emergencyGCode = self._settings.get(["emergencyGcode"])
         
-        tMaxOffTemp = self._settings.get(["tMaxOffTemp"])
-        bMaxOffTemp = self._settings.get(["bMaxOffTemp"])
+        tMaxOffTempStr = self._settings.get(["tMaxOffTemp"])
+        bMaxOffTempStr = self._settings.get(["bMaxOffTemp"])
         
-        tMaxDiff = self._settings.get(["tMaxDiff"])
-        bMaxDiff = self._settings.get(["bMaxDiff"])
+        tMaxDiffStr = self._settings.get(["tMaxDiff"])
+        bMaxDiffStr = self._settings.get(["bMaxDiff"])
+
+        bMaxDiff = float(bMaxDiffStr)
+        tMaxDiff = float(tMaxDiffStr)
+        bMaxOffTemp = float(bMaxOffTempStr)
+        tMaxOffTemp = float(btMaxOffTempStr)
         
         bTemps = temps["B"]
 ##        tTemps = temps["T0"]
