@@ -162,6 +162,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
 ##                _logger.debug('tCurrentTemp > tHighTemp. Sent emergencyGCode to printer')
                 time.sleep(5)
                 tThermalHighAlert = True
+                _logger.debug('set tThermalHighAlert to True')
             else:
                 tHighTemp = tCurrentTemp
             tThermalHighWarning = False
