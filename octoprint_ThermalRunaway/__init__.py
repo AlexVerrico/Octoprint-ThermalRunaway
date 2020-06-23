@@ -147,6 +147,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             if (bCurrentTemp > bHighTemp):
 ##                self._printer.commands(emergencyGCode)
 ##                _logger.debug('bCurrentTemp > bHighTemp. Sent emergencyGCode to printer')
+                time.sleep(5)
                 bThermalHighAlert = True
             else:
                 bHighTemp = bCurrentTemp
@@ -159,6 +160,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             if (tCurrentTemp > tHighTemp):
 ##                self._printer.commands(emergencyGCode)
 ##                _logger.debug('tCurrentTemp > tHighTemp. Sent emergencyGCode to printer')
+                time.sleep(5)
                 tThermalHighAlert = True
             else:
                 tHighTemp = tCurrentTemp
