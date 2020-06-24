@@ -13,17 +13,29 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
                            octoprint.plugin.TemplatePlugin):
     def on_after_startup(self):
         global bHighTemp
+        global bLowTemp
         global bThermalHighWarning
         global bThermalHighAlert
+        global bThermalLowWarning
+        global bThermalLowAlert
         global tHighTemp
+        global tLowTemp
         global tThermalHighWarning
         global tThermalHighAlert
+        global tThermalLowWarning
+        global tThermalLowAlert
         bHighTemp = 0.0
+        bLowTemp = 0.0
         bThermalHighWarning = False
         bThermalHighAlert = False
+        bThermalLowWarning = False
+        bThermalLowAlert = False
         tHighTemp = 0.0
+        tLowTemp = 0.0
         tThermalHighWarning = False
         tThermalHighAlert = False
+        tThermalLowWarning = False
+        tThermalLowAlert = False
         _logger.debug('reached end of on_after_startup')
         return
     
@@ -53,11 +65,18 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         _logger.debug('Reached start of check_temps')
         
         global bHighTemp
+        global bLowTemp
         global bThermalHighWarning
         global bThermalHighAlert
+        global bThermalLowWarning
+        global bThermalLowAlert
+        
         global tHighTemp
+        global tLowTemp
         global tThermalHighWarning
         global tThermalHighAlert
+        global tThermalLowWarning
+        global tThermalLowAlert
         
         emergencyGCode = self._settings.get(["emergencyGcode"])
         
