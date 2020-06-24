@@ -22,10 +22,12 @@ archive: https://github.com/AlexVerrico/Octoprint-ThermalRunaway/archive/master.
 # TODO
 tags:
 - thermal runaway
+- temperature
+- temp
 
 # TODO
 screenshots:
-- url: url of a screenshot, /assets/img/plugins/ThermalRunaway/ThermalRunaway-config.png
+- url: /assets/img/plugins/ThermalRunaway/ThermalRunaway-config.png
   alt: configuration
   caption: Configuration
 
@@ -88,12 +90,13 @@ compatibility:
 
 ---
 
-**TODO**: #### An Octoprint plugin to provide some basic thermal runaway protection.
+
 __What this plugin does:__ <br/>
 Sends the configured GCode command when a heater on the printer is outside of configured maximum/minimum temperatures and not heading towards the set temperature<br/><br/>
 
 __What this plugin _does not_ do:__<br/>
 This plugin does not stop a thermal runaway, it just sends a GCode command, and it is up to you to find a way to handle that GCode command appropriately. As such, *I strongly recommend that you __watch your printer at all times__*
-
+<br/><br/>
+For more details, see [https://github.com/AlexVerrico/Octoprint-ThermalRunaway](https://github.com/AlexVerrico/Octoprint-ThermalRunaway)
 ### Disclaimer:  
 I, the plugin author, strongly recommend that you __NEVER__ leave you printer unattended while powered. This plugin is not a replacement for [firmware thermal runaway detection](https://3dprinting.stackexchange.com/a/8467). I, the plugin author, __cannot__ be held responsible for any damage to equipment or injuries that may arise from leaving your 3D Printer unattended. I, the plugin author, make no guarantees that this plugin will work or continue to work.
