@@ -22,3 +22,9 @@ This plugin has the following configuration options:
 
 ### Disclaimer:  
 I, the plugin author, strongly recommend that you __NEVER__ leave you printer unattended while powered. This plugin is not a replacement for [firmware thermal runaway detection](https://3dprinting.stackexchange.com/a/8467). I, the plugin author, __cannot__ be held responsible for any damage to equipment or injuries that may arise from leaving your 3D Printer unattended. I, the plugin author, make no guarantees that this plugin will work or continue to work.
+
+## Contributing
+
+All Pull Requests **<u>MUST</u>** be made to the devel branch, otherwise they will be ignored.<br/>
+Please ensure that you follow the style of the code (eg. use spaces not tabs, etc)<br/>
+Please open an issue to discuss what you features you want to add / bugs you want to fix _before_ working on them, as this avoids 2 people submitting a PR for the same feature/bug.
