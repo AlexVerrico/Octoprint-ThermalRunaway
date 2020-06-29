@@ -331,8 +331,8 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
 
 ##__plugin_name__ = "Thermalrunaway Plugin"
 
-__plugin_pythoncompat__ = ">=3,<4" # only python 3
-#__plugin_pythoncompat__ = ">=2.7,<4" # python 2 and 3 (possibly would work but can't test currently)
+#__plugin_pythoncompat__ = ">=3,<4" # only python 3
+__plugin_pythoncompat__ = ">=2.7,<4" # python 2 and 3 (possibly would work but can't test currently)
 
 def __plugin_load__():
     global __plugin_implementation__
