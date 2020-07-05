@@ -48,8 +48,8 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             bMaxOffTemp="30",
             tMaxDiff="20",
             tMaxOffTemp="30",
-            tDelay="5",
-            bDelay="10"
+            tDelay="25",
+            bDelay="20"
         )
 
     ##~~ TemplatePlugin mixin
