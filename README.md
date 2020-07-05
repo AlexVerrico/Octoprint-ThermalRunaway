@@ -15,6 +15,8 @@ or manually using this URL:
 
     https://github.com/AlexVerrico/Octoprint-ThermalRunaway/archive/master.zip
 
+Note: Some users have reported needing to manually restart octoprint after installation of the plugin
+
 ## Configuration
 This plugin has the following configuration options:
 
