@@ -1,3 +1,5 @@
+[![Donate](https://img.shields.io/badge/Donate%3A-Buy%20Me%20A%20Coffee-brightgreen)](https://www.buymeacoffee.com/AlexVerrico)
+
 # Thermal Runaway
 
 #### An Octoprint plugin to provide some basic thermal runaway protection.
@@ -30,3 +32,5 @@ I, the plugin author, strongly recommend that you __NEVER__ leave you printer un
 All Pull Requests **<u>MUST</u>** be made to the devel branch, otherwise they will be ignored.<br/>
 Please ensure that you follow the style of the code (eg. use spaces not tabs, etc)<br/>
 Please open an issue to discuss what you features you want to add / bugs you want to fix _before_ working on them, as this avoids 2 people submitting a PR for the same feature/bug.
+
+**If you find this plugin useful, please consider supporting my work through [Buy Me A Coffee](https://www.buymeacoffee.com/AlexVerrico)**
