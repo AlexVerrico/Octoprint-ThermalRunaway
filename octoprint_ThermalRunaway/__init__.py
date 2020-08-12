@@ -127,6 +127,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         if (tThermalHighAlert == True):
             _logger.debug('tThermalHighAlert = True')
             if (tCurrentTemp > tHighTemp):
+                self._printer.commands("M117 plugin.ThermalRunaway sent emergencyGCode due to tool OverTemp")
                 self._printer.commands(emergencyGCode)
                 _logger.debug('tCurrentTemp > tHighTemp. Sent emergencyGCode to printer')
             else:
@@ -138,6 +139,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         if (bThermalHighAlert == True):
             _logger.debug('bThermalHighAlert = True')
             if (bCurrentTemp > bHighTemp):
+                self._printer.commands("M117 plugin.ThermalRunaway sent emergencyGCode due to bed OverTemp")
                 self._printer.commands(emergencyGCode)
                 _logger.debug('bCurrentTemp > bHighTemp. Sent emergencyGCode to printer')
             else:
@@ -151,6 +153,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         if (tThermalLowAlert == True):
             _logger.debug('tThermalLowAlert = True')
             if (tCurrentTemp < tLowTemp):
+                self._printer.commands("M117 plugin.ThermalRunaway sent emergencyGCode due to tool UnderTemp")
                 self._printer.commands(emergencyGCode)
                 _logger.debug('tCurrentTemp < tLowTemp. Sent emergencyGCode to printer')
             else:
@@ -162,6 +165,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         if (bThermalLowAlert == True):
             _logger.debug('bThermalLowAlert = True')
             if (bCurrentTemp < bLowTemp):
+                self._printer.commands("M117 plugin.ThermalRunaway sent emergencyGCode due to bed UnderTemp")
                 self._printer.commands(emergencyGCode)
                 _logger.debug('bCurrentTemp < bLowTemp. Sent emergencyGCode to printer')
             else:
