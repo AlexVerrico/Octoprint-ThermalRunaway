@@ -235,17 +235,14 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         ## If the bed is turned on then set bMaxTemp and bMinTemp
         if (bSetTemp > 0.0):
             bMaxTemp = bSetTemp + bMaxDiff
-            _logger.debug('bMaxTemp = ')
-            _logger.debug(bMaxTemp)
+            _logger.debug('bMaxTemp = %s' % bMaxTemp)
             bMinTemp = bSetTemp - bMaxDiff
-            _logger.debug('bMinTemp = ')
-            _logger.debug(bMinTemp)
+            _logger.debug('bMinTemp = %s' % bMinTemp)
 
             ## If the current temp of the bed is lower than the max allowed temp then set bThermalHighWarning to True
             if (bCurrentTemp < bMinTemp):
                 bLowTemp = bCurrentTemp
-                _logger.debug('bCurrentTemp < bLowTemp, set bLowTemp to bCurrentTemp. New bLowTemp = ')
-                _logger.debug(bLowTemp)
+                _logger.debug('bCurrentTemp < bLowTemp, set bLowTemp to bCurrentTemp. New bLowTemp = %s' % bLowTemp)
                 bThermalLowWarning = True
                 _logger.debug('set bThermalLowWarning to True')
 
@@ -254,22 +251,17 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             bMaxTemp = bMaxOffTemp
             bMinTemp = 0.0
 
-
-        
         ## If the hotend is turned on then set tMaxTemp and tMinTemp
         if (tSetTemp > 0.0):
             tMaxTemp = tSetTemp + tMaxDiff
-            _logger.debug('tMaxTemp = ')
-            _logger.debug(tMaxTemp)
+            _logger.debug('tMaxTemp = %s' % tMaxTemp)
             tMinTemp = tSetTemp - tMaxDiff
-            _logger.debug('tMinTemp = ')
-            _logger.debug(tMinTemp)
+            _logger.debug('tMinTemp = %s' % tMinTemp)
 
             ## If the current temp of the hotend is lower than the max allowed temp then set bThermalHighWarning to True
             if (tCurrentTemp < tMinTemp):
                 tLowTemp = tCurrentTemp
-                _logger.debug('tCurrentTemp < tLowTemp, set tLowTemp to tCurrentTemp. New tLowTemp = ')
-                _logger.debug(tLowTemp)
+                _logger.debug('tCurrentTemp < tLowTemp, set tLowTemp to tCurrentTemp. New tLowTemp = %s' % tLowTemp)
                 tThermalLowWarning = True
                 _logger.debug('set tThermalLowWarning to True')
 
@@ -278,21 +270,17 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             tMaxTemp = tMaxOffTemp
             tMinTemp = 0.0
 
-
-
         ## If the current temp of the bed is higher than the max allowed temp then set bThermalHighWarning to True
         if (bCurrentTemp > bMaxTemp):
             bHighTemp = bCurrentTemp
-            _logger.debug('bCurrentTemp > bMaxTemp, set bHighTemp to bCurrentTemp. New bHighTemp = ')
-            _logger.debug(bHighTemp)
+            _logger.debug('bCurrentTemp > bMaxTemp, set bHighTemp to bCurrentTemp. New bHighTemp = %s' % bHighTemp)
             bThermalHighWarning = True
             _logger.debug('set bThermalHighWarning to True')
 
         ## If the current temp of the hotend is higher than the max allowed temp then set tThermalHighWarning to True
         if (tCurrentTemp > tMaxTemp):
             tHighTemp = tCurrentTemp
-            _logger.debug('tCurrentTemp > tMaxTemp, set tHighTemp to tCurrentTemp. New tHighTemp = ')
-            _logger.debug(tHighTemp)
+            _logger.debug('tCurrentTemp > tMaxTemp, set tHighTemp to tCurrentTemp. New tHighTemp = %s' % tHighTemp)
             tThermalHighWarning = True
             _logger.debug('set tThermalHighWarning to True')
 
