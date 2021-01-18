@@ -27,6 +27,7 @@ If applicable, add screenshots to help explain your problem.
  - Octoprint Version: [eg. 1.4.0]
  - Browser: [e.g. chrome, safari]
  - Python Version: [eg. Python 3.8]
+ - Operating system that Octoprint is running on: [eg. Debian 10.5, Windows 10]
 
 **Additional context**
 Add any other context about the problem here.
