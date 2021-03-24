@@ -11,7 +11,8 @@ _logger = logging.getLogger('octoprint.plugins.ThermalRunaway')
 
 class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
                            octoprint.plugin.SettingsPlugin,
-                           octoprint.plugin.TemplatePlugin):
+                           octoprint.plugin.TemplatePlugin,
+                           octoprint.plugin.RestartNeedingPlugin):
     def on_after_startup(self):
 
         # global heaterList
