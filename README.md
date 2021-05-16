@@ -28,16 +28,16 @@ This plugin has the following configuration options:
 I, the plugin author, strongly recommend that you __NEVER__ leave you printer unattended while powered. This plugin is not a replacement for [firmware thermal runaway detection](https://3dprinting.stackexchange.com/a/8467). I, the plugin author, __cannot__ be held responsible for any damage to equipment or injuries that may arise from leaving your 3D Printer unattended. I, the plugin author, make no guarantees that this plugin will work or continue to work.
 
 ## Hooks
-This plugin provides the following three hooks:
-- `octoprint.plugin.ThermalRunaway.runaway_triggered`: Called when any thermal runaway is triggered
-- `octoprint.plugin.ThermalRunaway.over_runaway_triggered`: Called when an over temperature thermal runaway is triggered
-- `octoprint.plugin.ThermalRunaway.under_runaway_triggered`: Called when an under temperature thermal runaway is triggered
+This plugin provides the following three hooks:  
+- `octoprint.plugin.ThermalRunaway.runaway_triggered`: Called when any thermal runaway is triggered  
+- `octoprint.plugin.ThermalRunaway.over_runaway_triggered`: Called when an over temperature thermal runaway is triggered  
+- `octoprint.plugin.ThermalRunaway.under_runaway_triggered`: Called when an under temperature thermal runaway is triggered  
 
-All three of these hooks are called with the following parameters:
-`heater_id, set_temp, current_temp`
-heater_id is the id of the heater (usually something like T0 or B)
-set_temp is the target temperature for the heater
-current_temp is the reported temperature of the heater
+All three of these hooks are called with the following parameters:  
+`heater_id, set_temp, current_temp`  
+heater_id is the id of the heater (usually something like T0 or B)  
+set_temp is the target temperature for the heater  
+current_temp is the reported temperature of the heater  
 
 My plugin [Octoprint-TR_test](https://github.com/AlexVerrico/Octoprint-TR_Test) provides an example of how to register for a hook.
 
