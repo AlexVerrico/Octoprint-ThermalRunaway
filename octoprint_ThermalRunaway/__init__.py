@@ -1,69 +1,93 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-import octoprint.plugin  # Import the core octoprint plugin components
-import logging           # Import logging to allow for easier debugging
-import threading         # Import threading. This is used to process the temps asynchronously so that we don't block octoprints communications with the printer
-import time              # Import time. This is so that we can add delays to parts of the code
-
-_logger = logging.getLogger('octoprint.plugins.ThermalRunaway')
+# Import the core OctoPrint plugin components
+import octoprint.plugin
+# Import logging to allow for easier debugging
+import logging
+# Import threading. This is used to process the temps asynchronously so
+# that we don't block OctoPrints communications with the printer
+import threading
+# Import time. This is so that we can add delays to parts of the code
+import time
 
 
 class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
                            octoprint.plugin.SettingsPlugin,
                            octoprint.plugin.TemplatePlugin,
                            octoprint.plugin.RestartNeedingPlugin):
-    def on_after_startup(self):
 
-        # global heaterList
-        global heaterDict
-        heaterDict = dict()
-        heaterDict['B'] = {'highTemp': 0.0, 'lowTemp': 0.0,
-                           'thermalHighWarning': False, 'thermalLowWarning': False,
-                           'thermalHighAlert': False, 'thermalLowAlert': False}
+    def __init__(self):
+        # This allows us to store and display our logs with the rest of the OctoPrint logs
+        self.logger = logging.getLogger('octoprint.plugins.ThermalRunaway')
 
-        heaterDict['T0'] = {'highTemp': 0.0, 'lowTemp': 0.0,
-                            'thermalHighWarning': False, 'thermalLowWarning': False,
-                            'thermalHighAlert': False, 'thermalLowAlert': False}
-
-#        # create global variables for storing bed temps and thermal warnings
-#        global bHighTemp
-#        global bLowTemp
-#        global bThermalHighWarning
-#        global bThermalHighAlert
-#        global bThermalLowWarning
-#        global bThermalLowAlert
-#
-#        # create global variables for storing tool temps and thermal warnings
-#        global tHighTemp
-#        global tLowTemp
-#        global tThermalHighWarning
-#        global tThermalHighAlert
-#        global tThermalLowWarning
-#        global tThermalLowAlert
-
-#        # set initial values of bed variables
-#        bHighTemp = 0.0
-#        bLowTemp = 0.0
-#        bThermalHighWarning = False
-#        bThermalHighAlert = False
-#        bThermalLowWarning = False
-#        bThermalLowAlert = False
-#
-#        # set initial values of tool variables
-#        tHighTemp = 0.0
-#        tLowTemp = 0.0
-#        tThermalHighWarning = False
-#        tThermalHighAlert = False
-#        tThermalLowWarning = False
-#        tThermalLowAlert = False
-
-        # log that we have completed this function successfully.
-        _logger.debug('reached end of on_after_startup')
-
+        self.runaway_message = "Thermal Runaway ({t} temp) caught on heater {h}. Reported temp is {c}, set temp is {s} "
         return
 
-    # SettingsPlugin mixin
+    #######################
+    # StartupPlugin Mixin #
+    #######################
+    # Function to run after OctoPrint starts, used to initialise variables
+    def on_after_startup(self):
+        # Create a dictionary to store the data about the bed heater
+        self.heaterDict = {
+            'B': {
+                'delay': self._settings.get(['bDelay']),  # Delay before setting a thermal warning
+                'maxDiff': self._settings.get(['bMaxDiff']),  # Maximum allowed deviation from set temperature
+                'thermalHighWarning': False,  # Variable to store whether
+                'thermalLowWarning': False,  #
+                'thermalHighAlert': False,  #
+                'thermalLowAlert': False,  #
+                'thermalHighCount': 0,
+                'thermalLowCount': 0,
+                'temps': {
+                    'current': 0.0,
+                    'set': 0.0,
+                    'high': 0.0,
+                    'low': 0.0,
+                    'maxOff': self._settings.get(['bMaxOffTemp']),
+                    'max': 0.0,
+                    'min': 0.0
+                }
+            }
+        }
+
+        # Check how many extruders we should be monitoring
+        self.extruderCount = self._settings.get(['numberExtruders'])
+
+        # Loop through the number of extruders and create a dictionary for each one to store the data for it
+        for extruder in range(0, int(self.extruderCount)):
+            self.heaterDict['T{}'.format(extruder)] = {
+                'delay': self._settings.get(['tDelay']),
+                'maxDiff': self._settings.get(['tMaxDiff']),
+                'thermalHighWarning': False,
+                'thermalLowWarning': False,
+                'thermalHighAlert': False,
+                'thermalLowAlert': False,
+                'thermalHighCount': 0,
+                'thermalLowCount': 0,
+                'temps': {
+                    'current': 0.0,
+                    'set': 0.0,
+                    'high': 0.0,
+                    'low': 0.0,
+                    'maxOff': self._settings.get(['tMaxOffTemp']),
+                    'max': 0.0,
+                    'min': 0.0
+                }
+            }
+
+        # Check what GCode the user has specified to send in the event of a thermal runaway
+        self.emergencyGCode = self._settings.get(['emergencyGcode'])
+
+        # log that we have reached the end of this function
+        self.logger.debug('reached end of on_after_startup')
+        return
+
+    ########################
+    # SettingsPlugin Mixin #
+    ########################
+    # Function to return the default values for all settings for this plugin
     def get_settings_defaults(self):
         # Define default settings for this plugin
         return dict(
@@ -77,244 +101,254 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             bDelay="20"
         )
 
-    # TemplatePlugin mixin
+    ########################
+    # TemplatePlugin Mixin #
+    ########################
+    # Function to inform OctoPrint what parts of the UI we will be binding to
     def get_template_configs(self):
-        # Tell octoprint that we have a settings page
+        # Tell OctoPrint that we have a settings page
         return [
             dict(type="settings", custom_bindings=False)
         ]
 
-    # Temperatures received hook
-
-    def check_temps(self, temps):
-        _logger.debug('Spawned new thread.')  # Log that we spawned the new thread
-        _logger.debug('Reached start of check_temps')  # Log that we have reached the start of check_temps
-
-#        # set the necessary variables to be global
-#        global bHighTemp
-#        global bLowTemp
-#        global bThermalHighWarning
-#        global bThermalHighAlert
-#        global bThermalLowWarning
-#        global bThermalLowAlert
-#        global tHighTemp
-#        global tLowTemp
-#        global tThermalHighWarning
-#        global tThermalHighAlert
-#        global tThermalLowWarning
-#        global tThermalLowAlert
-        global heaterDict
-        heaterList = ('B', 'T0')
-#        B = heaterList['B']
-#        T0 = heaterList['T0']
-
-        # Get all settings values
-        emergencyGCode = self._settings.get(["emergencyGcode"])
-        tMaxOffTempStr = self._settings.get(["tMaxOffTemp"])
-        bMaxOffTempStr = self._settings.get(["bMaxOffTemp"])
-        bDelayStr = self._settings.get(["bDelay"])
-        tDelayStr = self._settings.get(["tDelay"])
-        tMaxDiffStr = self._settings.get(["tMaxDiff"])
-        bMaxDiffStr = self._settings.get(["bMaxDiff"])
-        _logger.debug('got all values from settings.')
-        bMaxDiff = float(bMaxDiffStr)
-        tMaxDiff = float(tMaxDiffStr)
-        bMaxOffTemp = float(bMaxOffTempStr)
-        tMaxOffTemp = float(tMaxOffTempStr)
-        _logger.debug('bMaxDiff = %s, tMaxDiff = %s, bMaxOffTemp = %s, tMaxOffTemp = %s' % (bMaxDiff, tMaxDiff, bMaxOffTemp, tMaxOffTemp))  # Log values to aid in debugging
-
-        delaysDict = dict()
-        delaysDict['B'] = int(bDelayStr)
-        delaysDict['T0'] = int(tDelayStr)
-
-        bTemps = temps['B']
-        _logger.debug('bTemps: %s' % bTemps)
-        tTemps = temps['T0']
-        _logger.debug('tTemps: %s' % tTemps)
-        tempsDict = dict()
-        tempsDict['B']['current'] = bTemps[0]
-        # bCurrentTemp = bTemps[0]
-        tempsDict['T0']['current'] = tTemps[0]
-        # tCurrentTemp = tTemps[0]
-        tempsDict['B']['set'] = bTemps[1]
-        tempsDict['T0']['set'] = tTemps[1]
-        tempsDict['B']['diff'] = bMaxDiff
-        tempsDict['T0']['diff'] = tMaxDiff
-        tempsDict['B']['maxOff'] = bMaxOffTemp
-        tempsDict['T0']['maxOff'] = tMaxOffTemp
-        # bSetTemp = bTemps[1]
-        # tSetTemp = tTemps[1]
-
-        _logger.debug("Got all values. Beginning to run through if statements...")
-
-        # Check if thermalHighAlert = True
-        for i in heaterList:
-            if heaterDict[i]['thermalHighAlert'] is True:
-                _logger.debug('%s thermalHighAlert = True' % i)
-                if tempsDict[i]['current'] > heaterDict[i]['highTemp']:
-                    self._printer.commands("M117 plugin.ThermalRunaway sent emergencyGCode due to %s OverTemp" % i)
-                    self._printer.commands(emergencyGCode)
-                    _logger.debug('%s currentTemp > %s highTemp. Sent emergencyGCode to printer' % (i, i))
-                else:
-                    heaterDict[i]['highTemp'] = tempsDict[i]['current']
-                heaterDict[i]['thermalHighAlert'] = False
-                _logger.debug('set %s thermalHighAlert to False' % i)
-
-            # Check if thermalLowAlert = True
-            if heaterDict[i]['thermalLowAlert'] is True:
-                _logger.debug('%s thermalLowAlert = True' % i)
-                if tempsDict[i]['current'] < heaterDict[i]['lowTemp']:
-                    self._printer.commands("M117 plugin.ThermalRunaway sent emergencyGCode due to %s UnderTemp" % i)
-                    self._printer.commands(emergencyGCode)
-                    _logger.debug('%s currentTemp < %s lowTemp. Sent emergencyGCode to printer' % (i, i))
-                else:
-                    heaterDict[i]['lowTemp'] = tempsDict[i]['current']
-                heaterDict[i]['thermalLowAlert'] = False
-                _logger.debug('set %s thermalLowAlert to False' % i)
-
-            # Check if thermalHighWarning is set to True
-            if heaterDict[i]['thermalHighWarning'] is True:
-                _logger.debug('%s thermalHighWarning = True' % i)
-                if tempsDict[i]['current'] > heaterDict[i]['highTemp']:
-                    _logger.debug('setting %s ThermalHighAlert to True...' % i)
-                    time.sleep(delaysDict[i])
-                    heaterDict[i]['thermalHighAlert'] = True
-                    _logger.debug('set %s thermalHighAlert to True' % i)
-                else:
-                    heaterDict[i]['highTemp'] = tempsDict[i]['current']
-                heaterDict[i]['thermalHighWarning'] = False
-                _logger.debug('set %s thermalHighWarning to False' % i)
-
-            # Check if thermalLowWarning is set to True
-            if heaterDict[i]['thermalLowWarning'] is True:
-                _logger.debug('%s thermalLowWarning = True' % i)
-                if tempsDict[i]['current'] < heaterDict[i]['lowTemp']:
-                    _logger.debug('setting %s thermalLowAlert to True...' % i)
-                    time.sleep(delaysDict[i])
-                    heaterDict[i]['thermalLowAlert'] = True
-                    _logger.debug('set %s thermalLowAlert to True' % i)
-                else:
-                    heaterDict[i]['lowTemp'] = tempsDict[i]['current']
-                heaterDict[i]['thermalLowWarning'] = False
-                _logger.debug('set %s thermalLowWarning to False' % i)
-
-            # If the heater is turned on then set maxTemp and minTemp
-            if tempsDict[i]['set'] > 0.0:
-                tempsDict[i]['max'] = tempsDict[i]['set'] + tempsDict[i]['diff']
-                _logger.debug('%s maxTemp = %s' % (i, tempsDict[i]['max']))
-                tempsDict[i]['min'] = tempsDict[i]['set'] - tempsDict[i]['diff']
-                _logger.debug('%s minTemp = %s' % (i, tempsDict[i]['min']))
-
-                # If the current temp of the heater is lower than the min allowed temp then set thermalLowWarning to True
-                if tempsDict[i]['current'] < tempsDict[i]['min']:
-                    heaterDict[i]['lowTemp'] = tempsDict[i]['current']
-                    _logger.debug('%s currentTemp < %s lowTemp, set %s lowTemp to %s currentTemp. New %s lowTemp = %s' % (i, i, i, i, i, heaterDict[i]['lowTemp']))
-                    heaterDict[i]['thermalLowWarning'] = True
-                    _logger.debug('set %s thermalLowWarning to True' % i)
-
-            # If the bed is turned off then set bMaxTemp to bMaxOffTemp
-            if tempsDict[i]['set'] <= 0.0:
-                tempsDict[i]['max'] = tempsDict[i]['maxOff']
-                tempsDict[i]['min'] = 0.0
-
-            # If the current temp of the heater is higher than the max allowed temp then set thermalHighWarning to True
-            if tempsDict[i]['current'] > tempsDict[i]['max']:
-                heaterDict[i]['highTemp'] = tempsDict[i]['current']
-                _logger.debug('%s currentTemp > %s maxTemp, set %s highTemp to %s currentTemp. New %s highTemp = %s' % (i, i, i, i, i, heaterDict[i]['highTemp']))
-                heaterDict[i]['thermalHighWarning'] = True
-                _logger.debug('set %s thermalHighWarning to True' % i)
-
-#        # Check if bThermalHighAlert = True
-#        if (bThermalHighAlert == True):
-#            _logger.debug('bThermalHighAlert = True')
-#            if (bCurrentTemp > bHighTemp):
-#                self._printer.commands("M117 plugin.ThermalRunaway sent emergencyGCode due to bed OverTemp")
-#                self._printer.commands(emergencyGCode)
-#                _logger.debug('bCurrentTemp > bHighTemp. Sent emergencyGCode to printer')
-#            else:
-#                bHighTemp = bCurrentTemp
-#            bThermalHighAlert = False
-#            _logger.debug('set bThermalHighAlert to False')
-
-#        ## Check if bThermalLowAlert = True
-#        if (bThermalLowAlert == True):
-#            _logger.debug('bThermalLowAlert = True')
-#            if (bCurrentTemp < bLowTemp):
-#                self._printer.commands("M117 plugin.ThermalRunaway sent emergencyGCode due to bed UnderTemp")
-#                self._printer.commands(emergencyGCode)
-#                _logger.debug('bCurrentTemp < bLowTemp. Sent emergencyGCode to printer')
-#            else:
-#                bLowTemp = bCurrentTemp
-#            bThermalLowAlert = False
-#            _logger.debug('set bThermalLowAlert to False')
-
-#        ## Check if tThermalHighWarning is set to True
-#        if (tThermalHighWarning == True):
-#            _logger.debug('tThermalHighWarning = True')
-#            if (tCurrentTemp > tHighTemp):
-#                _logger.debug('setting tThermalHighAlert to True...')
-#                time.sleep(tDelay)
-#                tThermalHighAlert = True
-#                _logger.debug('set tThermalHighAlert to True')
-#            else:
-#                tHighTemp = tCurrentTemp
-#            tThermalHighWarning = False
-#            _logger.debug('set tThermalHighWarning to False')
-
-#        ## Check if tThermalLowWarning is set to True
-#        if (tThermalLowWarning == True):
-#            _logger.debug('tThermalLowWarning = True')
-#            if (tCurrentTemp < tLowTemp):
-#                _logger.debug('setting tThermalLowAlert to True...')
-#                time.sleep(tDelay)
-#                tThermalLowAlert = True
-#                _logger.debug('set tThermalLowAlert to True')
-#            else:
-#                tLowTemp = tCurrentTemp
-#            tThermalLowWarning = False
-#            _logger.debug('set tThermalLowWarning to False')
-
-#        ## If the hotend is turned on then set tMaxTemp and tMinTemp
-#        if (tSetTemp > 0.0):
-#            tMaxTemp = tSetTemp + tMaxDiff
-#            _logger.debug('tMaxTemp = %s' % tMaxTemp)
-#            tMinTemp = tSetTemp - tMaxDiff
-#            _logger.debug('tMinTemp = %s' % tMinTemp)
-#
-#            # If the current temp of the hotend is lower than the max allowed temp then set bThermalHighWarning to True
-#            if (tCurrentTemp < tMinTemp):
-#                tLowTemp = tCurrentTemp
-#                _logger.debug('tCurrentTemp < tLowTemp, set tLowTemp to tCurrentTemp. New tLowTemp = %s' % tLowTemp)
-#                tThermalLowWarning = True
-#                _logger.debug('set tThermalLowWarning to True')
-
-#        ## If the hotend is turned off then set tMaxTemp to tMaxOffTemp
-#        if (tSetTemp <= 0.0):
-#            tMaxTemp = tMaxOffTemp
-#            tMinTemp = 0.0
-
-#        ## If the current temp of the hotend is higher than the max allowed temp then set tThermalHighWarning to True
-#        if (tCurrentTemp > tMaxTemp):
-#            tHighTemp = tCurrentTemp
-#            _logger.debug('tCurrentTemp > tMaxTemp, set tHighTemp to tCurrentTemp. New tHighTemp = %s' % tHighTemp)
-#            tThermalHighWarning = True
-#            _logger.debug('set tThermalHighWarning to True')
-
-        # Log that we have reached the end of check_temps
-        _logger.debug('Reached end of check_temps')
-        return
-
+    ##############################
+    # Temperatures Received Hook #
+    ##############################
     # Temperatures hook
     def get_temps(self, comm, parsed_temps):
-        _logger.debug('Temps received')  # Log that temps have been received
-        temps = parsed_temps
-        if temps == parsed_temps:
-            _logger.debug('Spawning new thread...')  # Log that we are attempting to spawn a new thread to process the received temps in
-            t = threading.Timer(0, self.check_temps, [temps])  # Create a threading Timer object
-            t.start()  # Start the threading Timer object
-        return parsed_temps  # return the temps to octoprint
+        # Wrap everything in a try-except-finally statement to ensure that we always pass the temps to OctoPrint
+        try:
+            # Create a thread to process the received temps to ensure that we don't block communications to the printer
+            t = threading.Thread(target=self.check_temps, args=(parsed_temps,))
+            t.start()  # Start the thread
+        except Exception as e:
+            # Log that something went wrong
+            self.logger.error("Exception in get_temps: {}".format(e))
+        finally:
+            # log that we have reached the end of this function
+            self.logger.debug('Reached end of get_temps')
+            return parsed_temps  # return the temps to OctoPrint
 
-    # Softwareupdate hook
+    ####################
+    # Custom functions #
+    ####################
+    # Function to process temperatures received from the printer and check for a thermal runaway
+    def check_temps(self, temps):
+        # Log that we have reached the start of check_temps
+        self.logger.debug('Reached start of check_temps')
+
+        # Check what GCode the user has specified to send in the event of a thermal runaway
+        self.emergencyGCode = self._settings.get(["emergencyGcode"])
+
+        # Store received temperatures and settings values for the bed
+        self.heaterDict['B']['delay'] = float(self._settings.get(["bDelay"]))
+        self.heaterDict['B']['maxDiff'] = float(self._settings.get(["bMaxDiff"]))
+        self.heaterDict['B']['temps']['set'] = float(temps['B'][1])
+        self.heaterDict['B']['temps']['current'] = float(temps['B'][0])
+        self.heaterDict['B']['temps']['maxOff'] = float(self._settings.get(["bMaxOffTemp"]))
+
+        # Store received temperatures and settings values for the extruder(s)
+        for extruder in range(0, int(self.extruderCount)):
+            self.heaterDict['T{}'.format(extruder)]['delay'] = float(self._settings.get(["tDelay"]))
+            self.heaterDict['T{}'.format(extruder)]['maxDiff'] = float(self._settings.get(["tMaxDiff"]))
+            self.heaterDict['T{}'.format(extruder)]['temps']['set'] = float(temps['T{}'.format(extruder)][1])
+            self.heaterDict['T{}'.format(extruder)]['temps']['current'] = float(temps['T{}'.format(extruder)][0])
+            self.heaterDict['T{}'.format(extruder)]['temps']['maxOff'] = float(self._settings.get(["tMaxOffTemp"]))
+
+        # Loop through dictionary of heaters
+        for heater, values in self.heaterDict.items():
+            # Check if thermalHighCount is greater than 2 (alert level)
+            if int(self.heaterDict[heater]['thermalHighCount']) >= 2:
+                # Log that a thermalHighAlert has been triggered
+                self.logger.warning('thermalHighCount > 2 for {h}'.format(h=heater))
+                # Check if the current temp is higher than the stored highTemp
+                if float(self.heaterDict[heater]['temps']['current']) >= float(self.heaterDict[heater]['temps']['high']):
+                    # Call self.runaway_triggered and pass the required details
+                    self.runaway_triggered(heater,
+                                           self.heaterDict[heater]['temps']['set'],
+                                           self.heaterDict[heater]['temps']['current'],
+                                           'over')
+                    # Log that we caught a thermal runaway
+                    self.logger.critical(self.runaway_message.format(h=heater,
+                                                                     c=self.heaterDict[heater]['temps']['current'],
+                                                                     s=self.heaterDict[heater]['temps']['set'],
+                                                                     t="over"))
+                else:
+                    # Set stored highTemp to current temp
+                    self.heaterDict[heater]['temps']['high'] = float(self.heaterDict[heater]['temps']['current'])
+                    # Set thermalHighCount to 1 (warning level)
+                    self.heaterDict[heater]['thermalHighCount'] = 1
+
+            # Check if thermalLowCount is greater than 2 (alert level)
+            if int(self.heaterDict[heater]['thermalLowCount']) >= 2:
+                # Log that a thermalLowAlert has been triggered
+                self.logger.warning('thermalLowCount > 2 for {h}'.format(h=heater))
+                # Check if the current temp is lower than the stored lowTemp
+                if float(self.heaterDict[heater]['temps']['current']) <= float(self.heaterDict[heater]['temps']['low']):
+                    # Call self.runaway_triggered and pass the required details
+                    self.runaway_triggered(heater,
+                                           self.heaterDict[heater]['temps']['set'],
+                                           self.heaterDict[heater]['temps']['current'],
+                                           'under')
+                    # Log that we caught a thermal runaway
+                    self.logger.critical(self.runaway_message.format(h=heater,
+                                                                     c=self.heaterDict[heater]['temps']['current'],
+                                                                     s=self.heaterDict[heater]['temps']['set'],
+                                                                     t="under"))
+                else:
+                    # Set stored lowTemp to current temp
+                    self.heaterDict[heater]['temps']['low'] = float(self.heaterDict[heater]['temps']['current'])
+                    # Set thermalLowCount to 1 (warning level)
+                    self.heaterDict[heater]['thermalLowCount'] = 1
+
+            # Check if thermalHighCount is equal to 1 (warning level)
+            if int(self.heaterDict[heater]['thermalHighCount']) == 1:
+                # Log that a thermalHighWarning has been triggered
+                self.logger.warning('thermalHighCount == 1 for {h}'.format(h=heater))
+                # Check if the current temp is greater than or equal to the stored highTemp
+                if float(self.heaterDict[heater]['temps']['current']) >= float(self.heaterDict[heater]['temps']['high']):
+                    # Delay to avoid immediately triggering a thermal runaway alert
+                    time.sleep(int(self.heaterDict[heater]['delay']))
+                    # Set thermalHighCount to 2 (alert level)
+                    self.heaterDict[heater]['thermalHighCount'] = 2
+                else:
+                    # Set stored highTemp to current temp
+                    self.heaterDict[heater]['temps']['high'] = float(self.heaterDict[heater]['temps']['current'])
+                    # Set thermalHighCount to 0
+                    self.heaterDict[heater]['thermalHighCount'] = 0
+
+            # Check if thermalLowCount is equal to 1 (warning level)
+            if int(self.heaterDict[heater]['thermalLowCount']) == 1:
+                # Log that a thermalLowWarning has been triggered
+                self.logger.warning('thermalLowCount == 1 for {h}'.format(h=heater))
+                # Check if the current temp is less than or equal to the stored lowTemp
+                if float(self.heaterDict[heater]['temps']['current']) <= float(self.heaterDict[heater]['temps']['low']):
+                    # Delay to avoid immediately triggering a thermal runaway alert
+                    time.sleep(int(self.heaterDict[heater]['delay']))
+                    # Set thermalLowCount to 2 (alert level)
+                    self.heaterDict[heater]['thermalLowCount'] = 2
+                else:
+                    # Set stored lowTemp to current temp
+                    self.heaterDict[heater]['temps']['low'] = float(self.heaterDict[heater]['temps']['current'])
+                    # Set thermalLowCount to 0
+                    self.heaterDict[heater]['thermalLowCount'] = 0
+
+            # Check if the heater is turned on
+            if float(self.heaterDict[heater]['temps']['set']) > 0.0:
+                # Set the heater max temp to setTemp + maxDiff
+                self.heaterDict[heater]['temps']['max'] = float(self.heaterDict[heater]['temps']['set']) + \
+                                                          float(self.heaterDict[heater]['maxDiff'])
+                # Set the heater min temp to setTemp - maxDiff
+                self.heaterDict[heater]['temps']['min'] = float(self.heaterDict[heater]['temps']['set']) - \
+                                                          float(self.heaterDict[heater]['maxDiff'])
+                # Log what we set the max and min temps to
+                self.logger.debug("Heater {h} is set to {s}. Max temp set to {ma}, Min temp set to {mi}"
+                                  .format(h=heater,
+                                          s=self.heaterDict[heater]['temps']['set'],
+                                          ma=self.heaterDict[heater]['temps']['max'],
+                                          mi=self.heaterDict[heater]['temps']['min']))
+
+            # If the heater is turned off:
+            else:
+                # Set the max temp to maxOffTemp
+                self.heaterDict[heater]['temps']['max'] = float(self.heaterDict[heater]['temps']['maxOff'])
+                # Set the min temp to 0
+                self.heaterDict[heater]['temps']['min'] = 0.0
+                # Log what we set the max and min temps to
+                self.logger.debug("Heater {h} is set to less than 0.0. Max temp set to {ma}, Min temp set to {mi}"
+                                  .format(h=heater,
+                                          ma=self.heaterDict[heater]['temps']['max'],
+                                          mi=self.heaterDict[heater]['temps']['min']))
+
+            # Check if the current temp is lower than the minTemp
+            if float(self.heaterDict[heater]['temps']['current']) < float(self.heaterDict[heater]['temps']['min']):
+                # Set the lowTemp to the current temp
+                self.heaterDict[heater]['temps']['low'] = float(self.heaterDict[heater]['temps']['current'])
+                # Check if thermalLowCount is equal to 0:
+                if int(self.heaterDict[heater]['thermalLowCount']) == 0:
+                    # Set thermalLowCount to 1 (warning level)
+                    self.heaterDict[heater]['thermalLowCount'] = 1
+            else:
+                # Set thermalLowCount to 0 (all clear)
+                self.heaterDict[heater]['thermalLowCount'] = 0
+
+            # Check if the current temp is higher than the maxTemp
+            if float(self.heaterDict[heater]['temps']['current']) > float(self.heaterDict[heater]['temps']['max']):
+                # Set the highTemp to the current temp
+                self.heaterDict[heater]['temps']['high'] = float(self.heaterDict[heater]['temps']['current'])
+                # Check if the thermalHighCount is equal to 0:
+                if int(self.heaterDict[heater]['thermalHighCount']) == 0:
+                    # Set thermalHighCount to 1 (warning level)
+                    self.heaterDict[heater]['thermalHighCount'] = 1
+            else:
+                # Set thermalHighCount to 0 (all clear)
+                self.heaterDict[heater]['thermalHighCount'] = 0
+
+        # log that we have reached the end of this function
+        self.logger.debug('Reached end of check_temps')
+        return
+
+    # Function that is used to call all plugins that have registered handlers for this plugins hooks
+    def runaway_triggered(self, heater_id: str, set_temp: float, current_temp: float, runaway_type: str):
+        # Wrap everything in a try-except to catch any errors
+        try:
+            # Send the emergency GCode
+            self._printer.commands(self.emergencyGCode)
+
+            # Generate a list of plugins that have registered handlers for the hook runaway_triggered
+            registered_plugins = self._plugin_manager.get_hooks(
+                "octoprint.plugin.ThermalRunaway.runaway_triggered"
+            )
+            # Iterate through the list of registered hooks
+            for name, hook in registered_plugins.items():
+                try:
+                    # Attempt to call the hook in a new thread
+                    t = threading.Thread(target=hook, args=(heater_id, set_temp, current_temp))
+                    t.start()
+                except Exception as e:
+                    # Log that something went wrong
+                    self.logger.exception("Exception in runway_triggered: {}".format(e))
+
+            if runaway_type == 'over':
+                # Generate a list of plugins that have registered handlers for the hook over_runaway_triggered
+                registered_plugins = self._plugin_manager.get_hooks(
+                    "octoprint.plugin.ThermalRunaway.over_runaway_triggered"
+                )
+                # Iterate through the list of registered hooks
+                for name, hook in registered_plugins.items():
+                    try:
+                        # Attempt to call the hook in a new thread
+                        t = threading.Thread(target=hook, args=(heater_id, set_temp, current_temp))
+                        t.start()
+                    except Exception as e:
+                        # Log that something went wrong
+                        self.logger.exception("Exception in runaway_triggered: {}".format(e))
+
+            if runaway_type == 'under':
+                # Generate a list of plugins that have registered handlers for the hook under_runaway_triggered
+                registered_plugins = self._plugin_manager.get_hooks(
+                    "octoprint.plugin.ThermalRunaway.under_runaway_triggered"
+                )
+                # Iterate through the list of registered hooks
+                for name, hook in registered_plugins.items():
+                    try:
+                        # Attempt to call the hook in a new thread
+                        t = threading.Thread(target=hook, args=(heater_id, set_temp, current_temp))
+                        t.start()
+                    except Exception as e:
+                        # Log that something went wrong
+                        self.logger.exception("Exception in runaway_triggered: {}".format(e))
+
+        except Exception as e:
+            # Log that something went wrong
+            self.logger.exception("Exception in runaway_triggered: {}".format(e))
+        finally:
+            return
+
+    ########################
+    # Software Update Hook #
+    ########################
+    # Function to tell OctoPrint how to update the plugin
     def get_update_information(self):
         # Define the configuration for your plugin to use with the Software Update
         # Plugin here. See https://docs.octoprint.org/en/master/bundledplugins/softwareupdate.html
