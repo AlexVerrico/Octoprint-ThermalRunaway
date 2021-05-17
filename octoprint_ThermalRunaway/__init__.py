@@ -157,81 +157,6 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
 
         # Loop through dictionary of heaters
         for heater, values in self.heaterDict.items():
-            # Check if thermalHighCount is greater than 2 (alert level)
-            if int(self.heaterDict[heater]['thermalHighCount']) >= 2:
-                # Log that a thermalHighAlert has been triggered
-                self.logger.warning('thermalHighCount > 2 for {h}'.format(h=heater))
-                # Check if the current temp is higher than the stored highTemp
-                if float(self.heaterDict[heater]['temps']['current']) >= float(self.heaterDict[heater]['temps']['high']):
-                    # Call self.runaway_triggered and pass the required details
-                    self.runaway_triggered(heater,
-                                           self.heaterDict[heater]['temps']['set'],
-                                           self.heaterDict[heater]['temps']['current'],
-                                           'over')
-                    # Log that we caught a thermal runaway
-                    self.logger.critical(self.runaway_message.format(h=heater,
-                                                                     c=self.heaterDict[heater]['temps']['current'],
-                                                                     s=self.heaterDict[heater]['temps']['set'],
-                                                                     t="over"))
-                else:
-                    # Set stored highTemp to current temp
-                    self.heaterDict[heater]['temps']['high'] = float(self.heaterDict[heater]['temps']['current'])
-                    # Set thermalHighCount to 1 (warning level)
-                    self.heaterDict[heater]['thermalHighCount'] = 1
-
-            # Check if thermalLowCount is greater than 2 (alert level)
-            if int(self.heaterDict[heater]['thermalLowCount']) >= 2:
-                # Log that a thermalLowAlert has been triggered
-                self.logger.warning('thermalLowCount > 2 for {h}'.format(h=heater))
-                # Check if the current temp is lower than the stored lowTemp
-                if float(self.heaterDict[heater]['temps']['current']) <= float(self.heaterDict[heater]['temps']['low']):
-                    # Call self.runaway_triggered and pass the required details
-                    self.runaway_triggered(heater,
-                                           self.heaterDict[heater]['temps']['set'],
-                                           self.heaterDict[heater]['temps']['current'],
-                                           'under')
-                    # Log that we caught a thermal runaway
-                    self.logger.critical(self.runaway_message.format(h=heater,
-                                                                     c=self.heaterDict[heater]['temps']['current'],
-                                                                     s=self.heaterDict[heater]['temps']['set'],
-                                                                     t="under"))
-                else:
-                    # Set stored lowTemp to current temp
-                    self.heaterDict[heater]['temps']['low'] = float(self.heaterDict[heater]['temps']['current'])
-                    # Set thermalLowCount to 1 (warning level)
-                    self.heaterDict[heater]['thermalLowCount'] = 1
-
-            # Check if thermalHighCount is equal to 1 (warning level)
-            if int(self.heaterDict[heater]['thermalHighCount']) == 1:
-                # Log that a thermalHighWarning has been triggered
-                self.logger.warning('thermalHighCount == 1 for {h}'.format(h=heater))
-                # Check if the current temp is greater than or equal to the stored highTemp
-                if float(self.heaterDict[heater]['temps']['current']) >= float(self.heaterDict[heater]['temps']['high']):
-                    # Delay to avoid immediately triggering a thermal runaway alert
-                    time.sleep(int(self.heaterDict[heater]['delay']))
-                    # Set thermalHighCount to 2 (alert level)
-                    self.heaterDict[heater]['thermalHighCount'] = 2
-                else:
-                    # Set stored highTemp to current temp
-                    self.heaterDict[heater]['temps']['high'] = float(self.heaterDict[heater]['temps']['current'])
-                    # Set thermalHighCount to 0
-                    self.heaterDict[heater]['thermalHighCount'] = 0
-
-            # Check if thermalLowCount is equal to 1 (warning level)
-            if int(self.heaterDict[heater]['thermalLowCount']) == 1:
-                # Log that a thermalLowWarning has been triggered
-                self.logger.warning('thermalLowCount == 1 for {h}'.format(h=heater))
-                # Check if the current temp is less than or equal to the stored lowTemp
-                if float(self.heaterDict[heater]['temps']['current']) <= float(self.heaterDict[heater]['temps']['low']):
-                    # Delay to avoid immediately triggering a thermal runaway alert
-                    time.sleep(int(self.heaterDict[heater]['delay']))
-                    # Set thermalLowCount to 2 (alert level)
-                    self.heaterDict[heater]['thermalLowCount'] = 2
-                else:
-                    # Set stored lowTemp to current temp
-                    self.heaterDict[heater]['temps']['low'] = float(self.heaterDict[heater]['temps']['current'])
-                    # Set thermalLowCount to 0
-                    self.heaterDict[heater]['thermalLowCount'] = 0
 
             # Check if the heater is turned on
             if float(self.heaterDict[heater]['temps']['set']) > 0.0:
@@ -283,6 +208,84 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             else:
                 # Set thermalHighCount to 0 (all clear)
                 self.heaterDict[heater]['thermalHighCount'] = 0
+
+            # Check if thermalHighCount is greater than 2 (alert level)
+            if int(self.heaterDict[heater]['thermalHighCount']) >= 2:
+                # Log that a thermalHighAlert has been triggered
+                self.logger.warning('thermalHighCount > 2 for {h}'.format(h=heater))
+                # Check if the current temp is higher than the stored highTemp
+                if float(self.heaterDict[heater]['temps']['current']) >= float(self.heaterDict[heater]['temps']['high']):
+                    # Call self.runaway_triggered and pass the required details
+                    self.runaway_triggered(heater,
+                                           self.heaterDict[heater]['temps']['set'],
+                                           self.heaterDict[heater]['temps']['current'],
+                                           'over')
+                    # Log that we caught a thermal runaway
+                    self.logger.critical(self.runaway_message.format(h=heater,
+                                                                     c=self.heaterDict[heater]['temps']['current'],
+                                                                     s=self.heaterDict[heater]['temps']['set'],
+                                                                     t="over"))
+                    self.heaterDict[heater]['thermalHighCount'] = 0
+                else:
+                    # Set stored highTemp to current temp
+                    self.heaterDict[heater]['temps']['high'] = float(self.heaterDict[heater]['temps']['current'])
+                    # Set thermalHighCount to 1 (warning level)
+                    self.heaterDict[heater]['thermalHighCount'] = 1
+
+            # Check if thermalLowCount is greater than 2 (alert level)
+            if int(self.heaterDict[heater]['thermalLowCount']) >= 2:
+                # Log that a thermalLowAlert has been triggered
+                self.logger.warning('thermalLowCount > 2 for {h}'.format(h=heater))
+                # Check if the current temp is lower than the stored lowTemp
+                if float(self.heaterDict[heater]['temps']['current']) <= float(self.heaterDict[heater]['temps']['low']):
+                    # Call self.runaway_triggered and pass the required details
+                    self.runaway_triggered(heater,
+                                           self.heaterDict[heater]['temps']['set'],
+                                           self.heaterDict[heater]['temps']['current'],
+                                           'under')
+                    # Log that we caught a thermal runaway
+                    self.logger.critical(self.runaway_message.format(h=heater,
+                                                                     c=self.heaterDict[heater]['temps']['current'],
+                                                                     s=self.heaterDict[heater]['temps']['set'],
+                                                                     t="under"))
+                    self.heaterDict[heater]['thermalLowCount'] = 0
+                else:
+                    # Set stored lowTemp to current temp
+                    self.heaterDict[heater]['temps']['low'] = float(self.heaterDict[heater]['temps']['current'])
+                    # Set thermalLowCount to 1 (warning level)
+                    self.heaterDict[heater]['thermalLowCount'] = 1
+
+            # Check if thermalHighCount is equal to 1 (warning level)
+            if int(self.heaterDict[heater]['thermalHighCount']) == 1:
+                # Log that a thermalHighWarning has been triggered
+                self.logger.warning('thermalHighCount == 1 for {h}'.format(h=heater))
+                # Check if the current temp is greater than or equal to the stored highTemp
+                if float(self.heaterDict[heater]['temps']['current']) >= float(self.heaterDict[heater]['temps']['high']):
+                    # Delay to avoid immediately triggering a thermal runaway alert
+                    time.sleep(int(self.heaterDict[heater]['delay']))
+                    # Set thermalHighCount to 2 (alert level)
+                    self.heaterDict[heater]['thermalHighCount'] = 2
+                else:
+                    # Set stored highTemp to current temp
+                    self.heaterDict[heater]['temps']['high'] = float(self.heaterDict[heater]['temps']['current'])
+                    # Set thermalHighCount to 0
+                    self.heaterDict[heater]['thermalHighCount'] = 0
+
+            # Check if thermalLowCount is equal to 1 (warning level)
+            if int(self.heaterDict[heater]['thermalLowCount']) == 1:
+                # Log that a thermalLowWarning has been triggered
+                self.logger.warning('thermalLowCount == 1 for {h}'.format(h=heater))
+                # Check if the current temp is less than or equal to the stored lowTemp
+                if float(self.heaterDict[heater]['temps']['current']) <= float(self.heaterDict[heater]['temps']['low']):
+                    # Delay to avoid immediately triggering a thermal runaway alert
+                    time.sleep(int(self.heaterDict[heater]['delay']))
+                    # Set thermalLowCount to 2 (alert level)
+                    self.heaterDict[heater]['thermalLowCount'] = 2
+                else:
+                    # Set stored lowTemp to current temp
+                    self.heaterDict[heater]['temps']['low'] = float(self.heaterDict[heater]['temps']['current'])
+                    # Set thermalLowCount to 0
+                    self.heaterDict[heater]['thermalLowCount'] = 0
 
         # log that we have reached the end of this function
         self.logger.debug('Reached end of check_temps')
