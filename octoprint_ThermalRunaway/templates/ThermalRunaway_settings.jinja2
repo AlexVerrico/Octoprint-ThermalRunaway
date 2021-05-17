@@ -22,6 +22,9 @@
 			<br/><br/>
 			Maximum time in seconds that the bed is allowed to be outside of min/max values (set temp -/+ maximum difference) before triggering a Thermal Runaway:<br/>
 			<input type="text" data-bind="value: settings.plugins.ThermalRunaway.bDelay">
+            <label class="checkbox">
+            <input type="checkbox" data-bind="checked: settings.plugins.ThermalRunaway.tTriggerOnEqual">{{ _('Try disabling this if thermal runaways are been triggered falsely') }}
+            </label>
         </div>
     </div>
 </form>
