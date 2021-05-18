@@ -98,7 +98,8 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             tMaxDiff="20",
             tMaxOffTemp="30",
             tDelay="25",
-            bDelay="20"
+            bDelay="20",
+            triggerOnEqual=True
         )
 
     ########################
@@ -213,8 +214,14 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             if int(self.heaterDict[heater]['thermalHighCount']) >= 2:
                 # Log that a thermalHighAlert has been triggered
                 self.logger.warning('thermalHighCount > 2 for {h}'.format(h=heater))
+                # Check whether the thermalAlert should be triggered if the current temperature
+                # is equal to the high temp and set the test variable accordingly
+                if self._settings.get(['triggerOnEqual']) is True:
+                    test = float(self.heaterDict[heater]['temps']['current']) >= float(self.heaterDict[heater]['temps']['high'])
+                else:
+                    test = float(self.heaterDict[heater]['temps']['current']) > float(self.heaterDict[heater]['temps']['high'])
                 # Check if the current temp is higher than the stored highTemp
-                if float(self.heaterDict[heater]['temps']['current']) >= float(self.heaterDict[heater]['temps']['high']):
+                if test is True:
                     # Call self.runaway_triggered and pass the required details
                     self.runaway_triggered(heater,
                                            self.heaterDict[heater]['temps']['set'],
@@ -236,8 +243,14 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             if int(self.heaterDict[heater]['thermalLowCount']) >= 2:
                 # Log that a thermalLowAlert has been triggered
                 self.logger.warning('thermalLowCount > 2 for {h}'.format(h=heater))
+                # Check whether the thermalAlert should be triggered if the current temperature
+                # is equal to the low temp and set the test variable accordingly
+                if self._settings.get(['triggerOnEqual']) is True:
+                    test = float(self.heaterDict[heater]['temps']['current']) <= float(self.heaterDict[heater]['temps']['low'])
+                else:
+                    test = float(self.heaterDict[heater]['temps']['current']) < float(self.heaterDict[heater]['temps']['low'])
                 # Check if the current temp is lower than the stored lowTemp
-                if float(self.heaterDict[heater]['temps']['current']) <= float(self.heaterDict[heater]['temps']['low']):
+                if test is True:
                     # Call self.runaway_triggered and pass the required details
                     self.runaway_triggered(heater,
                                            self.heaterDict[heater]['temps']['set'],
@@ -259,8 +272,14 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             if int(self.heaterDict[heater]['thermalHighCount']) == 1:
                 # Log that a thermalHighWarning has been triggered
                 self.logger.warning('thermalHighCount == 1 for {h}'.format(h=heater))
+                # Check whether the thermalAlert should be triggered if the current temperature
+                # is equal to the high temp and set the test variable accordingly
+                if self._settings.get(['triggerOnEqual']) is True:
+                    test = float(self.heaterDict[heater]['temps']['current']) >= float(self.heaterDict[heater]['temps']['high'])
+                else:
+                    test = float(self.heaterDict[heater]['temps']['current']) > float(self.heaterDict[heater]['temps']['high'])
                 # Check if the current temp is greater than or equal to the stored highTemp
-                if float(self.heaterDict[heater]['temps']['current']) >= float(self.heaterDict[heater]['temps']['high']):
+                if test is True:
                     # Delay to avoid immediately triggering a thermal runaway alert
                     time.sleep(int(self.heaterDict[heater]['delay']))
                     # Set thermalHighCount to 2 (alert level)
@@ -275,8 +294,14 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             if int(self.heaterDict[heater]['thermalLowCount']) == 1:
                 # Log that a thermalLowWarning has been triggered
                 self.logger.warning('thermalLowCount == 1 for {h}'.format(h=heater))
+                # Check whether the thermalAlert should be triggered if the current temperature
+                # is equal to the low temp and set the test variable accordingly
+                if self._settings.get(['triggerOnEqual']) is True:
+                    test = float(self.heaterDict[heater]['temps']['current']) <= float(self.heaterDict[heater]['temps']['low'])
+                else:
+                    test = float(self.heaterDict[heater]['temps']['current']) < float(self.heaterDict[heater]['temps']['low'])
                 # Check if the current temp is less than or equal to the stored lowTemp
-                if float(self.heaterDict[heater]['temps']['current']) <= float(self.heaterDict[heater]['temps']['low']):
+                if test is True:
                     # Delay to avoid immediately triggering a thermal runaway alert
                     time.sleep(int(self.heaterDict[heater]['delay']))
                     # Set thermalLowCount to 2 (alert level)
