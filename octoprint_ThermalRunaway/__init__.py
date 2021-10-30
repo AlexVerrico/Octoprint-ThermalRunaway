@@ -188,24 +188,24 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
 
             # Check if the current temp is lower than the minTemp
             if float(self.heaterDict[heater]['temps']['current']) < float(self.heaterDict[heater]['temps']['min']):
-                # Set the lowTemp to the current temp
-                self.heaterDict[heater]['temps']['low'] = float(self.heaterDict[heater]['temps']['current'])
                 # Check if thermalLowCount is equal to 0:
                 if int(self.heaterDict[heater]['thermalLowCount']) == 0:
                     # Set thermalLowCount to 1 (warning level)
                     self.heaterDict[heater]['thermalLowCount'] = 1
+                    # Set the lowTemp to the current temp
+                    self.heaterDict[heater]['temps']['low'] = float(self.heaterDict[heater]['temps']['current'])
             else:
                 # Set thermalLowCount to 0 (all clear)
                 self.heaterDict[heater]['thermalLowCount'] = 0
 
             # Check if the current temp is higher than the maxTemp
             if float(self.heaterDict[heater]['temps']['current']) > float(self.heaterDict[heater]['temps']['max']):
-                # Set the highTemp to the current temp
-                self.heaterDict[heater]['temps']['high'] = float(self.heaterDict[heater]['temps']['current'])
                 # Check if the thermalHighCount is equal to 0:
                 if int(self.heaterDict[heater]['thermalHighCount']) == 0:
                     # Set thermalHighCount to 1 (warning level)
                     self.heaterDict[heater]['thermalHighCount'] = 1
+                    # Set the highTemp to the current temp
+                    self.heaterDict[heater]['temps']['high'] = float(self.heaterDict[heater]['temps']['current'])
             else:
                 # Set thermalHighCount to 0 (all clear)
                 self.heaterDict[heater]['thermalHighCount'] = 0
