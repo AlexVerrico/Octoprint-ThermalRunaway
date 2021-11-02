@@ -197,26 +197,6 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             return
 
         # we're not within threshold, start processing warnings
-
-        # check if we've been on the wrong side of the threshold for longer than the specified delay
-        # if so, we're in runaway
-        if self.heaterDict[heater]['warningTimes'][direction] + int(self.heaterDict[heater]['delay']) > currentTime:
-            directionRunawayMap = {
-                'low': 'under',
-                'high': 'over'
-            }
-            # Call self.runaway_triggered and pass the required details
-            self.runaway_triggered(heater,
-                                    self.heaterDict[heater]['temps']['set'],
-                                    self.heaterDict[heater]['temps']['current'],
-                                    directionRunawayMap[direction])
-            # Log that we caught a thermal runaway
-            self.logger.critical(self.runaway_message.format(h=heater,
-                                                                c=self.heaterDict[heater]['temps']['current'],
-                                                                s=self.heaterDict[heater]['temps']['set'],
-                                                                t=directionRunawayMap[direction]))
-            
-            return
         
         # check if we're already in warning
         if self.heaterDict[heater]['warningTimes'][direction] == 0:
@@ -230,7 +210,25 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             self.logger.warning('{h} temperature has been {d} for {s} seconds, ({d}={dt}, current={c})'.format(
                 h = heater, d = direction, s = (currentTime - self.heaterDict[heater]['warningTimes'][direction]),
                 dt = self.heaterDict[heater]['temps'][direction], c = self.heaterDict[heater]['temps']['current']))
-
+            
+            # check if we've been on the wrong side of the threshold for longer than the specified delay
+            # if so, we're in runaway
+            if currentTime > self.heaterDict[heater]['warningTimes'][direction] + int(self.heaterDict[heater]['delay']):
+                directionRunawayMap = {
+                    'low': 'under',
+                    'high': 'over'
+                }
+                # Call self.runaway_triggered and pass the required details
+                self.runaway_triggered(heater,
+                                        self.heaterDict[heater]['temps']['set'],
+                                        self.heaterDict[heater]['temps']['current'],
+                                        directionRunawayMap[direction])
+                # Log that we caught a thermal runaway
+                self.logger.critical(self.runaway_message.format(h=heater,
+                                                                    c=self.heaterDict[heater]['temps']['current'],
+                                                                    s=self.heaterDict[heater]['temps']['set'],
+                                                                    t=directionRunawayMap[direction]))
+                
 
     def check_heater_thresholds(self, heater):
         aboveMin = float(self.heaterDict[heater]['temps']['current']) >= float(self.heaterDict[heater]['temps']['min'])
