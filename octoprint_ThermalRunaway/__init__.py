@@ -193,7 +193,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             # we're within threshold, nothing to worry about
             # reset any warnings
             self.heaterDict[heater]['warningTimes'][direction] = 0
-
+            self.logger.debug('Heater {h} is not {dir}, continuing'.format(h = heater, dir = direction))
             return
 
         # we're not within threshold, start processing warnings
@@ -222,10 +222,14 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         if self.heaterDict[heater]['warningTimes'][direction] == 0:
             # we were not, let's set it now
             self.heaterDict[heater]['warningTimes'][direction] = currentTime
-            self.logger.warning('{h} temperature is now {d}'.format(h=heater, d=direction))
+            self.logger.warning('{h} temperature is currently {d}, ({d}={dt}, current={c})'.format(
+                h = heater, d = direction,
+                dt = self.heaterDict[heater]['temps'][direction], c = self.heaterDict[heater]['temps']['current']))
         else:
             # we were, let's log it
-            self.logger.warning('{h} temperature has been {d} for {s} seconds'.format(h=heater, d=direction, s=(currentTime - self.heaterDict[heater]['warningTimes'][direction])))
+            self.logger.warning('{h} temperature has been {d} for {s} seconds, ({d}={dt}, current={c})'.format(
+                h = heater, d = direction, s = (currentTime - self.heaterDict[heater]['warningTimes'][direction],
+                 dt = self.heaterDict[heater]['temps'][direction], c = self.heaterDict[heater]['temps']['current'])))
 
 
     def check_heater_thresholds(self, heater):
@@ -283,6 +287,9 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
 
         # Loop through dictionary of heaters
         for heater, values in self.heaterDict.items():
+            temps = self.heaterDict[heater]['temps']
+            self.logger.debug('Checking heater {heater} (set = {s}, high = {h}, low = {l}, current = {c})'.format(heater = heater, s = temps['set'], h = temps['high'], l = temps['low'], c = temps['current']))
+
             self.check_heater_thresholds(heater)
 
             # Update high/low temps at end of loop
