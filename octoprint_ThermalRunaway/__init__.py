@@ -228,8 +228,8 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         else:
             # we were, let's log it
             self.logger.warning('{h} temperature has been {d} for {s} seconds, ({d}={dt}, current={c})'.format(
-                h = heater, d = direction, s = (currentTime - self.heaterDict[heater]['warningTimes'][direction],
-                 dt = self.heaterDict[heater]['temps'][direction], c = self.heaterDict[heater]['temps']['current'])))
+                h = heater, d = direction, s = (currentTime - self.heaterDict[heater]['warningTimes'][direction]),
+                dt = self.heaterDict[heater]['temps'][direction], c = self.heaterDict[heater]['temps']['current']))
 
 
     def check_heater_thresholds(self, heater):
