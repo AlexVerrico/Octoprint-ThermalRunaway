@@ -250,6 +250,8 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             # reset any warnings first
             self.reset_warning(heater, 'low')
             self.reset_warning(heater, 'high')
+            # might as well also reset tracked low/high temps since we're in a good range
+            self.update_stored_temps(heater, force = True)
             return
 
         if not aboveMin:
@@ -262,14 +264,15 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         
     
     # update thresholds to current temp (only if they're moving in the right direction)
-    def update_stored_temps(self, heater):
+    # if force is not set, only update temps that are moving in a good direction
+    def update_stored_temps(self, heater, force = False):
         # only update low if we're higher than previous low
-        if float(self.heaterDict[heater]['temps']['current']) > float(self.heaterDict[heater]['temps']['low']):
+        if force or float(self.heaterDict[heater]['temps']['current']) > float(self.heaterDict[heater]['temps']['low']):
             # Set the lowTemp to the current temp
             self.heaterDict[heater]['temps']['low'] = float(self.heaterDict[heater]['temps']['current'])
 
         # only update high if we're lower than previous high
-        if float(self.heaterDict[heater]['temps']['current']) < float(self.heaterDict[heater]['temps']['high']):
+        if force or float(self.heaterDict[heater]['temps']['current']) < float(self.heaterDict[heater]['temps']['high']):
             # Set the highTemp to the current temp
             self.heaterDict[heater]['temps']['high'] = float(self.heaterDict[heater]['temps']['current'])
 
