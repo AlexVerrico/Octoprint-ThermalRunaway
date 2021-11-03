@@ -193,7 +193,7 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             # we're within threshold, nothing to worry about
             if self.heaterDict[heater]['warningTimes'][direction] != 0:
                 # info-log that we've gotten out of warning state
-                self.logger.information('{h} temperature is no longer too {d} after {t} seconds, ({d}={dt}, current={c}, set={s})'.format(
+                self.logger.info('{h} temperature is no longer too {d} after {t} seconds, ({d}={dt}, current={c}, set={s})'.format(
                     h = heater, d = direction, t = (currentTime - self.heaterDict[heater]['warningTimes'][direction]),
                     dt = self.heaterDict[heater]['temps'][direction], c = self.heaterDict[heater]['temps']['current'], s = self.heaterDict[heater]['temps']['set']))
             # reset any warnings
