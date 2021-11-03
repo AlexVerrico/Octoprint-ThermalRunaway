@@ -191,6 +191,11 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         # check if we're currently within the threshold
         if goodComparisonMap[direction](float(self.heaterDict[heater]['temps']['current']), float(self.heaterDict[heater]['temps'][direction])):
             # we're within threshold, nothing to worry about
+            if self.heaterDict[heater]['warningTimes'][direction] != 0:
+                # info-log that we've gotten out of warning state
+                self.logger.information('{h} temperature is no longer too {d} after {t} seconds, ({d}={dt}, current={c}, set={s})'.format(
+                    h = heater, d = direction, t = (currentTime - self.heaterDict[heater]['warningTimes'][direction]),
+                    dt = self.heaterDict[heater]['temps'][direction], c = self.heaterDict[heater]['temps']['current'], s = self.heaterDict[heater]['temps']['set']))
             # reset any warnings
             self.heaterDict[heater]['warningTimes'][direction] = 0
             self.logger.debug('Heater {h} is not {dir}, continuing'.format(h = heater, dir = direction))
@@ -202,14 +207,14 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         if self.heaterDict[heater]['warningTimes'][direction] == 0:
             # we were not, let's set it now
             self.heaterDict[heater]['warningTimes'][direction] = currentTime
-            self.logger.warning('{h} temperature is currently {d}, ({d}={dt}, current={c})'.format(
+            self.logger.warning('{h} temperature is now too {d}, ({d}={dt}, current={c}, set={s})'.format(
                 h = heater, d = direction,
-                dt = self.heaterDict[heater]['temps'][direction], c = self.heaterDict[heater]['temps']['current']))
+                dt = self.heaterDict[heater]['temps'][direction], c = self.heaterDict[heater]['temps']['current'], s = self.heaterDict[heater]['temps']['set']))
         else:
-            # we were, let's log it
-            self.logger.warning('{h} temperature has been {d} for {s} seconds, ({d}={dt}, current={c})'.format(
-                h = heater, d = direction, s = (currentTime - self.heaterDict[heater]['warningTimes'][direction]),
-                dt = self.heaterDict[heater]['temps'][direction], c = self.heaterDict[heater]['temps']['current']))
+            # we were, let's log that we're still in it
+            self.logger.warning('{h} temperature has been too {d} for {t} seconds, ({d}={dt}, current={c}, set={s})'.format(
+                h = heater, d = direction, t = (currentTime - self.heaterDict[heater]['warningTimes'][direction]),
+                dt = self.heaterDict[heater]['temps'][direction], c = self.heaterDict[heater]['temps']['current'], s = self.heaterDict[heater]['temps']['set']))
             
             # check if we've been on the wrong side of the threshold for longer than the specified delay
             # if so, we're in runaway
