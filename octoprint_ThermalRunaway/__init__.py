@@ -34,20 +34,18 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             'B': {
                 'delay': self._settings.get(['bDelay']),  # Delay before setting a thermal warning
                 'maxDiff': self._settings.get(['bMaxDiff']),  # Maximum allowed deviation from set temperature
-                'thermalHighWarning': False,  # Variable to store whether
-                'thermalLowWarning': False,  #
-                'thermalHighAlert': False,  #
-                'thermalLowAlert': False,  #
-                'thermalHighCount': 0,
-                'thermalLowCount': 0,
+                'warningTimes': {
+                    'low': 0,
+                    'high': 0
+                },
                 'temps': {
-                    'current': 0.0,
-                    'set': 0.0,
-                    'high': 0.0,
-                    'low': 0.0,
+                    'current': float('NaN'),
+                    'set': float('NaN'),
+                    'high': float('NaN'),
+                    'low': float('NaN'),
                     'maxOff': self._settings.get(['bMaxOffTemp']),
-                    'max': 0.0,
-                    'min': 0.0
+                    'max': float('NaN'),
+                    'min': float('NaN')
                 }
             }
         }
@@ -60,20 +58,18 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
             self.heaterDict['T{}'.format(extruder)] = {
                 'delay': self._settings.get(['tDelay']),
                 'maxDiff': self._settings.get(['tMaxDiff']),
-                'thermalHighWarning': False,
-                'thermalLowWarning': False,
-                'thermalHighAlert': False,
-                'thermalLowAlert': False,
-                'thermalHighCount': 0,
-                'thermalLowCount': 0,
+                'warningTimes': {
+                    'low': 0,
+                    'high': 0
+                },
                 'temps': {
-                    'current': 0.0,
-                    'set': 0.0,
-                    'high': 0.0,
-                    'low': 0.0,
+                    'current': float('NaN'),
+                    'set': float('NaN'),
+                    'high': float('NaN'),
+                    'low': float('NaN'),
                     'maxOff': self._settings.get(['tMaxOffTemp']),
-                    'max': 0.0,
-                    'min': 0.0
+                    'max': float('NaN'),
+                    'min': float('NaN')
                 }
             }
 
@@ -133,6 +129,153 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
     ####################
     # Custom functions #
     ####################
+    # update the target range that heaters are expected to be in
+    def update_target_temp_range(self, heater, newSetTemp):
+        if self.heaterDict[heater]['temps']['set'] == newSetTemp:
+            # hasn't changed, no need to update
+            return
+
+        # rest only runs if set temp has changed
+
+        # store new set temp
+        self.heaterDict[heater]['temps']['set'] = newSetTemp
+
+        # reset high/low to current
+        self.heaterDict[heater]['temps']['low'] = self.heaterDict[heater]['temps']['current']
+        self.heaterDict[heater]['temps']['high'] = self.heaterDict[heater]['temps']['current']
+
+        # reset warnings when setpoint changes
+        self.heaterDict[heater]['warningTimes'] = {
+            'low': 0,
+            'high': 0
+        }
+
+        # Check if the heater is turned on
+        if float(self.heaterDict[heater]['temps']['set']) > 0.0:
+            # Set the heater max temp to setTemp + maxDiff
+            self.heaterDict[heater]['temps']['max'] = float(self.heaterDict[heater]['temps']['set']) + \
+                                                        float(self.heaterDict[heater]['maxDiff'])
+            # Set the heater min temp to setTemp - maxDiff
+            self.heaterDict[heater]['temps']['min'] = float(self.heaterDict[heater]['temps']['set']) - \
+                                                        float(self.heaterDict[heater]['maxDiff'])
+            # Log what we set the max and min temps to
+            self.logger.debug("Heater {h} is set to {s}. Max temp set to {ma}, Min temp set to {mi}"
+                                .format(h=heater,
+                                        s=self.heaterDict[heater]['temps']['set'],
+                                        ma=self.heaterDict[heater]['temps']['max'],
+                                        mi=self.heaterDict[heater]['temps']['min']))
+
+        # If the heater is turned off:
+        else:
+            # Set the max temp to maxOffTemp
+            self.heaterDict[heater]['temps']['max'] = float(self.heaterDict[heater]['temps']['maxOff'])
+            # Set the min temp to 0
+            self.heaterDict[heater]['temps']['min'] = 0.0
+            # Log what we set the max and min temps to
+            self.logger.debug("Heater {h} is set to less than 0.0. Max temp set to {ma}, Min temp set to {mi}"
+                                .format(h=heater,
+                                        ma=self.heaterDict[heater]['temps']['max'],
+                                        mi=self.heaterDict[heater]['temps']['min']))
+    
+    # reset warning, while logging it
+    def reset_warning(self, heater, direction):
+        currentTime = time.time()
+        if self.heaterDict[heater]['warningTimes'][direction] != 0:
+            # info-log that we've gotten out of warning state
+            self.logger.info('{h} temperature is no longer too {d} after {t} seconds, ({d}={dt}, current={c}, set={s})'.format(
+                h = heater, d = direction, t = (currentTime - self.heaterDict[heater]['warningTimes'][direction]),
+                dt = self.heaterDict[heater]['temps'][direction], c = self.heaterDict[heater]['temps']['current'], s = self.heaterDict[heater]['temps']['set']))
+        self.heaterDict[heater]['warningTimes'][direction] = 0
+
+    # unify high/low checks
+    # direction = high/low
+    def check_threshold_direction(self, heater, direction):
+        # comparisons where true is a good state, false is bad
+        goodComparisonMap = {
+            'low': lambda current, low: current > low,
+            'high': lambda current, high: current < high 
+        }
+
+        currentTime = time.time()
+
+        # check if we're currently within the threshold
+        if goodComparisonMap[direction](float(self.heaterDict[heater]['temps']['current']), float(self.heaterDict[heater]['temps'][direction])):
+            # we're within threshold, nothing to worry about
+            # reset any warnings
+            self.reset_warning(heater, direction)
+            self.logger.debug('Heater {h} is not {dir}, continuing'.format(h = heater, dir = direction))
+            return
+
+        # we're not within threshold, start processing warnings
+        
+        # check if we're already in warning
+        if self.heaterDict[heater]['warningTimes'][direction] == 0:
+            # we were not, let's set it now
+            self.heaterDict[heater]['warningTimes'][direction] = currentTime
+            self.logger.warning('{h} temperature is now too {d}, ({d}={dt}, current={c}, set={s})'.format(
+                h = heater, d = direction,
+                dt = self.heaterDict[heater]['temps'][direction], c = self.heaterDict[heater]['temps']['current'], s = self.heaterDict[heater]['temps']['set']))
+        else:
+            # we were, let's log that we're still in it
+            self.logger.warning('{h} temperature has been too {d} for {t} seconds, ({d}={dt}, current={c}, set={s})'.format(
+                h = heater, d = direction, t = (currentTime - self.heaterDict[heater]['warningTimes'][direction]),
+                dt = self.heaterDict[heater]['temps'][direction], c = self.heaterDict[heater]['temps']['current'], s = self.heaterDict[heater]['temps']['set']))
+            
+            # check if we've been on the wrong side of the threshold for longer than the specified delay
+            # if so, we're in runaway
+            if currentTime > self.heaterDict[heater]['warningTimes'][direction] + int(self.heaterDict[heater]['delay']):
+                directionRunawayMap = {
+                    'low': 'under',
+                    'high': 'over'
+                }
+                # Call self.runaway_triggered and pass the required details
+                self.runaway_triggered(heater,
+                                        self.heaterDict[heater]['temps']['set'],
+                                        self.heaterDict[heater]['temps']['current'],
+                                        directionRunawayMap[direction])
+                # Log that we caught a thermal runaway
+                self.logger.critical(self.runaway_message.format(h=heater,
+                                                                    c=self.heaterDict[heater]['temps']['current'],
+                                                                    s=self.heaterDict[heater]['temps']['set'],
+                                                                    t=directionRunawayMap[direction]))
+                
+
+    def check_heater_thresholds(self, heater):
+        aboveMin = float(self.heaterDict[heater]['temps']['current']) >= float(self.heaterDict[heater]['temps']['min'])
+        belowMax = float(self.heaterDict[heater]['temps']['current']) <= float(self.heaterDict[heater]['temps']['max'])
+
+        if aboveMin and belowMax:
+            # temperature is within target range, skip
+            self.logger.debug('{h} temperature is within target range, skipping'.format(h=heater))
+            # reset any warnings first
+            self.reset_warning(heater, 'low')
+            self.reset_warning(heater, 'high')
+            # might as well also reset tracked low/high temps since we're in a good range
+            self.update_stored_temps(heater, force = True)
+            return
+
+        if not aboveMin:
+            # temp below target range
+            self.check_threshold_direction(heater, 'low')
+        
+        if not belowMax:
+            # temp above target range
+            self.check_threshold_direction(heater, 'high')
+        
+    
+    # update thresholds to current temp (only if they're moving in the right direction)
+    # if force is not set, only update temps that are moving in a good direction
+    def update_stored_temps(self, heater, force = False):
+        # only update low if we're higher than previous low
+        if force or float(self.heaterDict[heater]['temps']['current']) > float(self.heaterDict[heater]['temps']['low']):
+            # Set the lowTemp to the current temp
+            self.heaterDict[heater]['temps']['low'] = float(self.heaterDict[heater]['temps']['current'])
+
+        # only update high if we're lower than previous high
+        if force or float(self.heaterDict[heater]['temps']['current']) < float(self.heaterDict[heater]['temps']['high']):
+            # Set the highTemp to the current temp
+            self.heaterDict[heater]['temps']['high'] = float(self.heaterDict[heater]['temps']['current'])
+
     # Function to process temperatures received from the printer and check for a thermal runaway
     def check_temps(self, temps):
         # Log that we have reached the start of check_temps
@@ -144,173 +287,28 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         # Store received temperatures and settings values for the bed
         self.heaterDict['B']['delay'] = float(self._settings.get(["bDelay"]))
         self.heaterDict['B']['maxDiff'] = float(self._settings.get(["bMaxDiff"]))
-        self.heaterDict['B']['temps']['set'] = float(temps['B'][1])
         self.heaterDict['B']['temps']['current'] = float(temps['B'][0])
         self.heaterDict['B']['temps']['maxOff'] = float(self._settings.get(["bMaxOffTemp"]))
+        self.update_target_temp_range('B', float(temps['B'][1]))
+
 
         # Store received temperatures and settings values for the extruder(s)
         for extruder in range(0, int(self.extruderCount)):
             self.heaterDict['T{}'.format(extruder)]['delay'] = float(self._settings.get(["tDelay"]))
             self.heaterDict['T{}'.format(extruder)]['maxDiff'] = float(self._settings.get(["tMaxDiff"]))
-            self.heaterDict['T{}'.format(extruder)]['temps']['set'] = float(temps['T{}'.format(extruder)][1])
             self.heaterDict['T{}'.format(extruder)]['temps']['current'] = float(temps['T{}'.format(extruder)][0])
             self.heaterDict['T{}'.format(extruder)]['temps']['maxOff'] = float(self._settings.get(["tMaxOffTemp"]))
+            self.update_target_temp_range('T{}'.format(extruder), float(temps['T{}'.format(extruder)][1]))
 
         # Loop through dictionary of heaters
         for heater, values in self.heaterDict.items():
+            temps = self.heaterDict[heater]['temps']
+            self.logger.debug('Checking heater {heater} (set = {s}, high = {h}, low = {l}, current = {c})'.format(heater = heater, s = temps['set'], h = temps['high'], l = temps['low'], c = temps['current']))
 
-            # Check if the heater is turned on
-            if float(self.heaterDict[heater]['temps']['set']) > 0.0:
-                # Set the heater max temp to setTemp + maxDiff
-                self.heaterDict[heater]['temps']['max'] = float(self.heaterDict[heater]['temps']['set']) + \
-                                                          float(self.heaterDict[heater]['maxDiff'])
-                # Set the heater min temp to setTemp - maxDiff
-                self.heaterDict[heater]['temps']['min'] = float(self.heaterDict[heater]['temps']['set']) - \
-                                                          float(self.heaterDict[heater]['maxDiff'])
-                # Log what we set the max and min temps to
-                self.logger.debug("Heater {h} is set to {s}. Max temp set to {ma}, Min temp set to {mi}"
-                                  .format(h=heater,
-                                          s=self.heaterDict[heater]['temps']['set'],
-                                          ma=self.heaterDict[heater]['temps']['max'],
-                                          mi=self.heaterDict[heater]['temps']['min']))
+            self.check_heater_thresholds(heater)
 
-            # If the heater is turned off:
-            else:
-                # Set the max temp to maxOffTemp
-                self.heaterDict[heater]['temps']['max'] = float(self.heaterDict[heater]['temps']['maxOff'])
-                # Set the min temp to 0
-                self.heaterDict[heater]['temps']['min'] = 0.0
-                # Log what we set the max and min temps to
-                self.logger.debug("Heater {h} is set to less than 0.0. Max temp set to {ma}, Min temp set to {mi}"
-                                  .format(h=heater,
-                                          ma=self.heaterDict[heater]['temps']['max'],
-                                          mi=self.heaterDict[heater]['temps']['min']))
-
-            # Check if the current temp is lower than the minTemp
-            if float(self.heaterDict[heater]['temps']['current']) < float(self.heaterDict[heater]['temps']['min']):
-                # Set the lowTemp to the current temp
-                self.heaterDict[heater]['temps']['low'] = float(self.heaterDict[heater]['temps']['current'])
-                # Check if thermalLowCount is equal to 0:
-                if int(self.heaterDict[heater]['thermalLowCount']) == 0:
-                    # Set thermalLowCount to 1 (warning level)
-                    self.heaterDict[heater]['thermalLowCount'] = 1
-            else:
-                # Set thermalLowCount to 0 (all clear)
-                self.heaterDict[heater]['thermalLowCount'] = 0
-
-            # Check if the current temp is higher than the maxTemp
-            if float(self.heaterDict[heater]['temps']['current']) > float(self.heaterDict[heater]['temps']['max']):
-                # Set the highTemp to the current temp
-                self.heaterDict[heater]['temps']['high'] = float(self.heaterDict[heater]['temps']['current'])
-                # Check if the thermalHighCount is equal to 0:
-                if int(self.heaterDict[heater]['thermalHighCount']) == 0:
-                    # Set thermalHighCount to 1 (warning level)
-                    self.heaterDict[heater]['thermalHighCount'] = 1
-            else:
-                # Set thermalHighCount to 0 (all clear)
-                self.heaterDict[heater]['thermalHighCount'] = 0
-
-            # Check if thermalHighCount is greater than 2 (alert level)
-            if int(self.heaterDict[heater]['thermalHighCount']) >= 2:
-                # Log that a thermalHighAlert has been triggered
-                self.logger.warning('thermalHighCount > 2 for {h}'.format(h=heater))
-                # Check whether the thermalAlert should be triggered if the current temperature
-                # is equal to the high temp and set the test variable accordingly
-                if self._settings.get(['triggerOnEqual']) is True:
-                    test = float(self.heaterDict[heater]['temps']['current']) >= float(self.heaterDict[heater]['temps']['high'])
-                else:
-                    test = float(self.heaterDict[heater]['temps']['current']) > float(self.heaterDict[heater]['temps']['high'])
-                # Check if the current temp is higher than the stored highTemp
-                if test is True:
-                    # Call self.runaway_triggered and pass the required details
-                    self.runaway_triggered(heater,
-                                           self.heaterDict[heater]['temps']['set'],
-                                           self.heaterDict[heater]['temps']['current'],
-                                           'over')
-                    # Log that we caught a thermal runaway
-                    self.logger.critical(self.runaway_message.format(h=heater,
-                                                                     c=self.heaterDict[heater]['temps']['current'],
-                                                                     s=self.heaterDict[heater]['temps']['set'],
-                                                                     t="over"))
-                    self.heaterDict[heater]['thermalHighCount'] = 0
-                else:
-                    # Set stored highTemp to current temp
-                    self.heaterDict[heater]['temps']['high'] = float(self.heaterDict[heater]['temps']['current'])
-                    # Set thermalHighCount to 1 (warning level)
-                    self.heaterDict[heater]['thermalHighCount'] = 1
-
-            # Check if thermalLowCount is greater than 2 (alert level)
-            if int(self.heaterDict[heater]['thermalLowCount']) >= 2:
-                # Log that a thermalLowAlert has been triggered
-                self.logger.warning('thermalLowCount > 2 for {h}'.format(h=heater))
-                # Check whether the thermalAlert should be triggered if the current temperature
-                # is equal to the low temp and set the test variable accordingly
-                if self._settings.get(['triggerOnEqual']) is True:
-                    test = float(self.heaterDict[heater]['temps']['current']) <= float(self.heaterDict[heater]['temps']['low'])
-                else:
-                    test = float(self.heaterDict[heater]['temps']['current']) < float(self.heaterDict[heater]['temps']['low'])
-                # Check if the current temp is lower than the stored lowTemp
-                if test is True:
-                    # Call self.runaway_triggered and pass the required details
-                    self.runaway_triggered(heater,
-                                           self.heaterDict[heater]['temps']['set'],
-                                           self.heaterDict[heater]['temps']['current'],
-                                           'under')
-                    # Log that we caught a thermal runaway
-                    self.logger.critical(self.runaway_message.format(h=heater,
-                                                                     c=self.heaterDict[heater]['temps']['current'],
-                                                                     s=self.heaterDict[heater]['temps']['set'],
-                                                                     t="under"))
-                    self.heaterDict[heater]['thermalLowCount'] = 0
-                else:
-                    # Set stored lowTemp to current temp
-                    self.heaterDict[heater]['temps']['low'] = float(self.heaterDict[heater]['temps']['current'])
-                    # Set thermalLowCount to 1 (warning level)
-                    self.heaterDict[heater]['thermalLowCount'] = 1
-
-            # Check if thermalHighCount is equal to 1 (warning level)
-            if int(self.heaterDict[heater]['thermalHighCount']) == 1:
-                # Log that a thermalHighWarning has been triggered
-                self.logger.warning('thermalHighCount == 1 for {h}'.format(h=heater))
-                # Check whether the thermalAlert should be triggered if the current temperature
-                # is equal to the high temp and set the test variable accordingly
-                if self._settings.get(['triggerOnEqual']) is True:
-                    test = float(self.heaterDict[heater]['temps']['current']) >= float(self.heaterDict[heater]['temps']['high'])
-                else:
-                    test = float(self.heaterDict[heater]['temps']['current']) > float(self.heaterDict[heater]['temps']['high'])
-                # Check if the current temp is greater than or equal to the stored highTemp
-                if test is True:
-                    # Delay to avoid immediately triggering a thermal runaway alert
-                    time.sleep(int(self.heaterDict[heater]['delay']))
-                    # Set thermalHighCount to 2 (alert level)
-                    self.heaterDict[heater]['thermalHighCount'] = 2
-                else:
-                    # Set stored highTemp to current temp
-                    self.heaterDict[heater]['temps']['high'] = float(self.heaterDict[heater]['temps']['current'])
-                    # Set thermalHighCount to 0
-                    self.heaterDict[heater]['thermalHighCount'] = 0
-
-            # Check if thermalLowCount is equal to 1 (warning level)
-            if int(self.heaterDict[heater]['thermalLowCount']) == 1:
-                # Log that a thermalLowWarning has been triggered
-                self.logger.warning('thermalLowCount == 1 for {h}'.format(h=heater))
-                # Check whether the thermalAlert should be triggered if the current temperature
-                # is equal to the low temp and set the test variable accordingly
-                if self._settings.get(['triggerOnEqual']) is True:
-                    test = float(self.heaterDict[heater]['temps']['current']) <= float(self.heaterDict[heater]['temps']['low'])
-                else:
-                    test = float(self.heaterDict[heater]['temps']['current']) < float(self.heaterDict[heater]['temps']['low'])
-                # Check if the current temp is less than or equal to the stored lowTemp
-                if test is True:
-                    # Delay to avoid immediately triggering a thermal runaway alert
-                    time.sleep(int(self.heaterDict[heater]['delay']))
-                    # Set thermalLowCount to 2 (alert level)
-                    self.heaterDict[heater]['thermalLowCount'] = 2
-                else:
-                    # Set stored lowTemp to current temp
-                    self.heaterDict[heater]['temps']['low'] = float(self.heaterDict[heater]['temps']['current'])
-                    # Set thermalLowCount to 0
-                    self.heaterDict[heater]['thermalLowCount'] = 0
+            # Update high/low temps at end of loop
+            self.update_stored_temps(heater)
 
         # log that we have reached the end of this function
         self.logger.debug('Reached end of check_temps')
