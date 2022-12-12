@@ -10,6 +10,8 @@ import logging
 import threading
 # Import time. This is so that we can add delays to parts of the code
 import time
+# To copy temps via serialisation
+import json
 
 
 class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
@@ -115,8 +117,10 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
     def get_temps(self, comm, parsed_temps):
         # Wrap everything in a try-except-finally statement to ensure that we always pass the temps to OctoPrint
         try:
+            # deep copy temps to a new dict to avoid race conditions
+            copied_temps = json.loads(json.dumps(parsed_temps))
             # Create a thread to process the received temps to ensure that we don't block communications to the printer
-            t = threading.Thread(target=self.check_temps, args=(parsed_temps,))
+            t = threading.Thread(target=self.check_temps, args=(copied_temps,))
             t.start()  # Start the thread
         except Exception as e:
             # Log that something went wrong
@@ -281,34 +285,37 @@ class ThermalRunawayPlugin(octoprint.plugin.StartupPlugin,
         # Log that we have reached the start of check_temps
         self.logger.debug('Reached start of check_temps')
 
-        # Check what GCode the user has specified to send in the event of a thermal runaway
-        self.emergencyGCode = self._settings.get(["emergencyGcode"])
+        try:
+            # Check what GCode the user has specified to send in the event of a thermal runaway
+            self.emergencyGCode = self._settings.get(["emergencyGcode"])
 
-        # Store received temperatures and settings values for the bed
-        self.heaterDict['B']['delay'] = float(self._settings.get(["bDelay"]))
-        self.heaterDict['B']['maxDiff'] = float(self._settings.get(["bMaxDiff"]))
-        self.heaterDict['B']['temps']['current'] = float(temps['B'][0])
-        self.heaterDict['B']['temps']['maxOff'] = float(self._settings.get(["bMaxOffTemp"]))
-        self.update_target_temp_range('B', float(temps['B'][1]))
+            # Store received temperatures and settings values for the bed
+            self.heaterDict['B']['delay'] = float(self._settings.get(["bDelay"]))
+            self.heaterDict['B']['maxDiff'] = float(self._settings.get(["bMaxDiff"]))
+            self.heaterDict['B']['temps']['current'] = float(temps['B'][0])
+            self.heaterDict['B']['temps']['maxOff'] = float(self._settings.get(["bMaxOffTemp"]))
+            self.update_target_temp_range('B', float(temps['B'][1]))
 
 
-        # Store received temperatures and settings values for the extruder(s)
-        for extruder in range(0, int(self.extruderCount)):
-            self.heaterDict['T{}'.format(extruder)]['delay'] = float(self._settings.get(["tDelay"]))
-            self.heaterDict['T{}'.format(extruder)]['maxDiff'] = float(self._settings.get(["tMaxDiff"]))
-            self.heaterDict['T{}'.format(extruder)]['temps']['current'] = float(temps['T{}'.format(extruder)][0])
-            self.heaterDict['T{}'.format(extruder)]['temps']['maxOff'] = float(self._settings.get(["tMaxOffTemp"]))
-            self.update_target_temp_range('T{}'.format(extruder), float(temps['T{}'.format(extruder)][1]))
+            # Store received temperatures and settings values for the extruder(s)
+            for extruder in range(0, int(self.extruderCount)):
+                self.heaterDict['T{}'.format(extruder)]['delay'] = float(self._settings.get(["tDelay"]))
+                self.heaterDict['T{}'.format(extruder)]['maxDiff'] = float(self._settings.get(["tMaxDiff"]))
+                self.heaterDict['T{}'.format(extruder)]['temps']['current'] = float(temps['T{}'.format(extruder)][0])
+                self.heaterDict['T{}'.format(extruder)]['temps']['maxOff'] = float(self._settings.get(["tMaxOffTemp"]))
+                self.update_target_temp_range('T{}'.format(extruder), float(temps['T{}'.format(extruder)][1]))
 
-        # Loop through dictionary of heaters
-        for heater, values in self.heaterDict.items():
-            temps = self.heaterDict[heater]['temps']
-            self.logger.debug('Checking heater {heater} (set = {s}, high = {h}, low = {l}, current = {c})'.format(heater = heater, s = temps['set'], h = temps['high'], l = temps['low'], c = temps['current']))
+            # Loop through dictionary of heaters
+            for heater, values in self.heaterDict.items():
+                temps = self.heaterDict[heater]['temps']
+                self.logger.debug('Checking heater {heater} (set = {s}, high = {h}, low = {l}, current = {c})'.format(heater = heater, s = temps['set'], h = temps['high'], l = temps['low'], c = temps['current']))
 
-            self.check_heater_thresholds(heater)
+                self.check_heater_thresholds(heater)
 
-            # Update high/low temps at end of loop
-            self.update_stored_temps(heater)
+                # Update high/low temps at end of loop
+                self.update_stored_temps(heater)
+        except:
+            self.logger.warning('Exception in check_temps', exc_info=1);
 
         # log that we have reached the end of this function
         self.logger.debug('Reached end of check_temps')
